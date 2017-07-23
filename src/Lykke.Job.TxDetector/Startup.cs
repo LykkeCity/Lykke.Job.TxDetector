@@ -52,7 +52,9 @@ namespace Lykke.Job.TxDetector
             });
 
             var builder = new ContainerBuilder();
-            var appSettings = HttpSettingsLoader.Load<AppSettings>("https://settings-test.lykkex.net/5q7qe6hqfbeeahf53ux9bx97cbv7sf83_TxDetectorJob");
+            var appSettings = Environment.IsDevelopment()
+                ? Configuration.Get<AppSettings>()
+                : HttpSettingsLoader.Load<AppSettings>(Configuration.GetValue<string>("SettingsUrl"));
             var log = CreateLogWithSlack(services, appSettings);
 
             builder.RegisterModule(new JobModule(appSettings, log));
