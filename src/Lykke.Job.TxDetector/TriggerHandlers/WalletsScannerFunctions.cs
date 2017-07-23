@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.CashOperations;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
@@ -22,17 +23,17 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
         private readonly IConfirmPendingTxsQueue _confirmPendingTxsQueue;
         private readonly IBlockchainTransactionsCache _blockchainTransactionsCache;
+        private readonly AppSettings.TxDetectorSettings _txDetectorSettings;
 
         private int _currentBlockHeight;
-
-        private const int ProcessInParallelCount = 5;
 
         public WalletsScannerFunctions(IWalletCredentialsRepository walletCredentialsRepository,
             ISrvBlockchainReader srvBlockchainReader, IClientTradesRepository clientTradesRepository,
             ILog log, IInternalOperationsRepository internalOperationsRepository,
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             IConfirmPendingTxsQueue confirmPendingTxsQueue,
-            IBlockchainTransactionsCache blockchainTransactionsCache)
+            IBlockchainTransactionsCache blockchainTransactionsCache,
+            AppSettings.TxDetectorSettings txDetectorSettings)
         {
             _walletCredentialsRepository = walletCredentialsRepository;
             _srvBlockchainReader = srvBlockchainReader;
@@ -43,6 +44,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
             _confirmPendingTxsQueue = confirmPendingTxsQueue;
             _blockchainTransactionsCache = blockchainTransactionsCache;
+            _txDetectorSettings = txDetectorSettings;
         }
 
         [TimerTrigger("00:02:00")]
@@ -61,7 +63,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
 
         private async Task HandleWallets(IEnumerable<IWalletCredentials> walletCredentials)
         {
-            foreach (var chunk in walletCredentials.ToChunks(ProcessInParallelCount))
+            foreach (var chunk in walletCredentials.ToChunks(_txDetectorSettings.ProcessInParallelCount))
             {
                 var tasks = new List<Task>();
                 foreach (var item in chunk)

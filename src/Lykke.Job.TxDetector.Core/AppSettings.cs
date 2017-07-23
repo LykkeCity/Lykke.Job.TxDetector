@@ -17,6 +17,7 @@ namespace Lykke.Job.TxDetector.Core
             public NinjaSettings Ninja { get; set; }
             public NotificationsSettings Notifications { get; set; }
             public int TxDetectorConfirmationsLimit { get; set; }
+            public int ProcessInParallelCount { get; set; }
         }
 
         public class DbSettings
