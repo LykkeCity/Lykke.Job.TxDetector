@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lykke.Common" Version="1.1.79" />
+    <PackageReference Include="Lykke.MatchingEngine.Connector" Version="1.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lykke.Job.TxDetector.Core\Lykke.Job.TxDetector.Core.csproj" />
+  </ItemGroup>
+
+</Project>
