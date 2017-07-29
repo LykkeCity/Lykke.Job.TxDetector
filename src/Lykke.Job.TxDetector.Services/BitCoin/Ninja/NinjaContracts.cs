@@ -71,9 +71,6 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
 
     public class BitCoinInOut
     {
-        [JsonProperty("address")]
-        public string Address { get; set; }
-
         [JsonProperty("transactionId")]
         public string TransactionId { get; set; }
 

@@ -36,6 +36,7 @@ namespace Lykke.Job.TxDetector.Core
 
         public class NinjaSettings
         {
+            public bool IsMainNet { get; set; }
             public string Url { get; set; }
         }
 

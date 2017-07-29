@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
 {
@@ -90,8 +92,9 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
 
         }
 
-        public static BlockchainTransaction ConvertToBlockchainTransaction(this BitcoinAddressOperation item, string address)
+        public static BlockchainTransaction ConvertToBlockchainTransaction(this BitcoinAddressOperation item, bool isMainNet)
         {
+            var network = isMainNet ? Network.Main : Network.RegTest;
             return new BlockchainTransaction
             {
                 Confirmations = item.Confirmations,
@@ -101,14 +104,14 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                 ReceivedCoins = item.ReceivedCoins.Select(
                     x => new InputOutput
                     {
-                        Address = x.Address,
+                        Address = GetScriptFromBytes(x.ScriptPubKey).GetDestinationAddress(network).ToString(),
                         Amount = x.Quantity ?? x.Value,
                         BcnAssetId = x.AssetId
                     }).ToArray(),
                 SpentCoins = item.SpentCoins.Select(
                     x => new InputOutput
                     {
-                        Address = x.Address,
+                        Address = GetScriptFromBytes(x.ScriptPubKey).GetDestinationAddress(network).ToString(),
                         Amount = x.Quantity ?? x.Value,
                         BcnAssetId = x.AssetId
                     }).ToArray()
@@ -129,5 +132,19 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
             return result.ToArray();
         }
 
+        private static Script GetScriptFromBytes(string data)
+        {
+            var bytes = Encoders.Hex.DecodeData(data);
+            var script = Script.FromBytesUnsafe(bytes);
+            bool hasOps = false;
+            var reader = script.CreateReader();
+            foreach (var op in reader.ToEnumerable())
+            {
+                hasOps = true;
+                if (op.IsInvalid || (op.Name == "OP_UNKNOWN" && op.PushData == null))
+                    return null;
+            }
+            return !hasOps ? null : script;
+        }
     }
 }

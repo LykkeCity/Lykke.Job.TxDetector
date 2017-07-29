@@ -58,6 +58,9 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterInstance(_settings.TxDetectorJob)
                 .SingleInstance();
 
+            builder.RegisterInstance(_settings.TxDetectorJob.Ninja)
+                .SingleInstance();
+
             builder.RegisterInstance(_log)
                 .As<ILog>()
                 .SingleInstance();
@@ -86,7 +89,7 @@ namespace Lykke.Job.TxDetector.Modules
 
         private void BindServices(ContainerBuilder builder)
         {
-            builder.Register<ISrvBlockchainReader>(x => new SrvNinjaBlockChainReader(_settings.TxDetectorJob.Ninja.Url)).SingleInstance();
+            builder.RegisterType<SrvNinjaBlockChainReader>().As<ISrvBlockchainReader>().SingleInstance();
 
             builder.RegisterType<SrvEmailsFacade>().As<ISrvEmailsFacade>().SingleInstance();
 
