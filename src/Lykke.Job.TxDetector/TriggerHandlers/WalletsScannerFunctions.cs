@@ -7,6 +7,7 @@ using Common.Log;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.CashOperations;
+using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.JobTriggers.Triggers.Attributes;
 
@@ -24,6 +25,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly IConfirmPendingTxsQueue _confirmPendingTxsQueue;
         private readonly IBlockchainTransactionsCache _blockchainTransactionsCache;
         private readonly AppSettings.TxDetectorSettings _txDetectorSettings;
+        private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
 
         private int _currentBlockHeight;
 
@@ -33,7 +35,8 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             IConfirmPendingTxsQueue confirmPendingTxsQueue,
             IBlockchainTransactionsCache blockchainTransactionsCache,
-            AppSettings.TxDetectorSettings txDetectorSettings)
+            AppSettings.TxDetectorSettings txDetectorSettings,
+            IAppGlobalSettingsRepositry appGlobalSettingsRepositry)
         {
             _walletCredentialsRepository = walletCredentialsRepository;
             _srvBlockchainReader = srvBlockchainReader;
@@ -45,11 +48,20 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _confirmPendingTxsQueue = confirmPendingTxsQueue;
             _blockchainTransactionsCache = blockchainTransactionsCache;
             _txDetectorSettings = txDetectorSettings;
+            _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
         }
 
         [TimerTrigger("00:02:00")]
         public async Task ScanClients()
         {
+            if ((await _appGlobalSettingsRepositry.GetAsync()).BitcoinOperationsDisabled)
+            {
+                await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
+                    "Scan skipped. Btc operations disabled");
+
+                return;
+            }
+
             var dtStart = DateTime.UtcNow;
             await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
                 $"Scan started at:{dtStart}");
