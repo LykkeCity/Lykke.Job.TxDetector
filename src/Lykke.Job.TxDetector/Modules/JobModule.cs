@@ -104,6 +104,10 @@ namespace Lykke.Job.TxDetector.Modules
 
         private void BindRepositories(ContainerBuilder builder)
         {
+            builder.RegisterInstance<IPostponedCashInRepository>(
+                new PostponedCashInRepository(
+                    new AzureTableStorage<PostponedCashInRecord>(_dbSettings.BitCoinQueueConnectionString, "PostponedBtcCashIns", _log)));
+
             builder.RegisterInstance<IConfirmedTransactionsRepository>(
                 new ConfirmedTransactionsRepository(
                     new AzureTableStorage<ConfirmedTransactionRecord>(_dbSettings.BitCoinQueueConnectionString, "ConfirmedTransactions", _log)));

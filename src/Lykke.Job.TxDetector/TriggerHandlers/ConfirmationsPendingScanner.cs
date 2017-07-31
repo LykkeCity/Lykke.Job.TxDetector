@@ -5,6 +5,7 @@ using Common;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
+using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
 using Lykke.JobTriggers.Triggers.Attributes;
@@ -23,12 +24,16 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly ICachedAssetsService _assetsService;
         private readonly ISrvBlockchainReader _srvBlockchainReader;
         private readonly IConfirmedTransactionsRepository _confirmedTransactionsRepository;
+        private readonly IPostponedCashInRepository _postponedCashInRepository;
+        private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
 
         public ConfirmationsPendingScanner(IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             AppSettings.TxDetectorSettings settings, IInternalOperationsRepository internalOperationsRepository, TransferHandler transferHandler,
             CashInHandler cashInHandler, ICachedAssetsService assetsService,
             ISrvBlockchainReader srvBlockchainReader,
-            IConfirmedTransactionsRepository confirmedTransactionsRepository)
+            IConfirmedTransactionsRepository confirmedTransactionsRepository,
+            IPostponedCashInRepository postponedCashInRepository,
+            IAppGlobalSettingsRepositry appGlobalSettingsRepositry)
         {
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
             _settings = settings;
@@ -38,6 +43,8 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _assetsService = assetsService;
             _srvBlockchainReader = srvBlockchainReader;
             _confirmedTransactionsRepository = confirmedTransactionsRepository;
+            _postponedCashInRepository = postponedCashInRepository;
+            _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
         }
 
         [QueueTrigger("txs-confirm-pending", maxPollingIntervalMs: 1000, maxDequeueCount: 1)]
@@ -79,6 +86,14 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                             foreach (var cashIn in cashIns)
                             {
                                 var asset = await GetAssetByBcnIdAsync(cashIn.Key);
+
+                                var skipBtc = (await _appGlobalSettingsRepositry.GetAsync()).BtcOperationsDisabled;
+                                if (asset.Id == LykkeConstants.BitcoinAssetId && skipBtc)
+                                {
+                                    await _postponedCashInRepository.SaveAsync(tx.Hash);
+                                    return;
+                                }
+
                                 double sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
 
                                 await _cashInHandler.HandleCashInOperation(tx, asset, sum);

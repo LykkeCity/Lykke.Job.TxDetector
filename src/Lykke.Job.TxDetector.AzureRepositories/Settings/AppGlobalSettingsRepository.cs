@@ -23,11 +23,13 @@ namespace Lykke.Job.TxDetector.AzureRepositories.Settings
             {
                 PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(),
-                BitcoinOperationsDisabled = appGlobalSettings.BitcoinOperationsDisabled
+                BtcOperationsDisabled = appGlobalSettings.BtcOperationsDisabled,
+                BitcoinBlockchainOperationsDisabled = appGlobalSettings.BitcoinBlockchainOperationsDisabled
             };
         }
 
-        public bool BitcoinOperationsDisabled { get; set; }
+        public bool BtcOperationsDisabled { get; set; }
+        public bool BitcoinBlockchainOperationsDisabled { get; set; }
     }
 
     public class AppGlobalSettingsRepository : IAppGlobalSettingsRepositry

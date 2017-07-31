@@ -54,7 +54,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         [TimerTrigger("00:02:00")]
         public async Task ScanClients()
         {
-            if ((await _appGlobalSettingsRepositry.GetAsync()).BitcoinOperationsDisabled)
+            if ((await _appGlobalSettingsRepositry.GetAsync()).BitcoinBlockchainOperationsDisabled)
             {
                 await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
                     "Scan skipped. Btc operations disabled");
