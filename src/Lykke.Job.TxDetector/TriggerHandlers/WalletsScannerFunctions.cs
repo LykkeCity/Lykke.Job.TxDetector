@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -71,7 +72,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                 _currentBlockHeight = await _srvBlockchainReader.GetCurrentBlockHeight();
                 await _walletCredentialsRepository.ScanAllAsync(HandleWallets);
             }
-            catch (TaskCanceledException exc)
+            catch (Exception exc) when (exc is TaskCanceledException || exc is WebException)
             {
                 await _log.WriteWarningAsync(
                     nameof(TxDetector),
