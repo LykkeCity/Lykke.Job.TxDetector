@@ -3,24 +3,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Common.Log;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Services.BitCoin.Ninja;
-using Lykke.Service.Assets.Client.Custom;
 
 namespace Lykke.Job.TxDetector.Services.BitCoin
 {
     public class SrvNinjaBlockChainReader : ISrvBlockchainReader
     {
         private readonly AppSettings.NinjaSettings _ninjaSettings;
+        private readonly ILog _log;
         private const string Base58Symbols = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-        public SrvNinjaBlockChainReader(AppSettings.NinjaSettings ninjaSettings)
+        public SrvNinjaBlockChainReader(AppSettings.NinjaSettings ninjaSettings, ILog log)
         {
             _ninjaSettings = ninjaSettings;
 
             if (!_ninjaSettings.Url.EndsWith("/"))
                 _ninjaSettings.Url += "/";
+
+            _log = log;
         }
 
         private static async Task<string> DoRequest(string url)
@@ -42,22 +46,35 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
         private async Task<T> DoRequest<T>(string url)
         {
             var result = await DoRequest(url);
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(result);
+            return JsonConvert.DeserializeObject<T>(result);
         }
 
         public async Task<IEnumerable<IBlockchainTransaction>> GetBalanceChangesByAddressAsync(string address, int? until = null)
         {
-            var untilParameter = until != null ? $"&until={until}" : "";
-            var data = await DoRequest<BtcAddressModel>($"{_ninjaSettings.Url}balances/{address}?colored=true&from=tip{untilParameter}");
-
-            var result = new List<BlockchainTransaction>();
-
-            foreach (var item in data.Operations)
+            try
             {
-                result.Add(item.ConvertToBlockchainTransaction(_ninjaSettings.IsMainNet)); ;
-            }
+                var untilParameter = until != null ? $"&until={until}" : "";
+                var data = await DoRequest<BtcAddressModel>($"{_ninjaSettings.Url}balances/{address}?colored=true&from=tip{untilParameter}");
 
-            return result;
+                var result = new List<BlockchainTransaction>();
+
+                foreach (var item in data.Operations)
+                {
+                    result.Add(item.ConvertToBlockchainTransaction(_ninjaSettings.IsMainNet)); ;
+                }
+
+                return result;
+            }
+            catch (Exception exc)
+            {
+                await _log.WriteWarningAsync(
+                    nameof(TxDetector),
+                    nameof(SrvNinjaBlockChainReader),
+                    nameof(GetBalanceChangesByAddressAsync),
+                    exc.GetBaseException().Message,
+                    DateTime.UtcNow);
+                return new List<IBlockchainTransaction>(0);
+            }
         }
 
         public async Task<int?> GetConfirmationsCount(string hash)
@@ -66,13 +83,18 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
             {
                 var result = await DoRequest(_ninjaSettings.Url + $"transactions/{hash}?colored=true");
 
-                var contract = Newtonsoft.Json.JsonConvert.DeserializeObject<TransactionContract>(result);
+                var contract = JsonConvert.DeserializeObject<TransactionContract>(result);
 
                 return contract.Block.Confirmations;
             }
-            catch (Exception)
+            catch (Exception exc)
             {
-
+                await _log.WriteWarningAsync(
+                    nameof(TxDetector),
+                    nameof(SrvNinjaBlockChainReader),
+                    nameof(GetConfirmationsCount),
+                    exc.GetBaseException().Message,
+                    DateTime.UtcNow);
                 return null;
             }
         }
@@ -80,7 +102,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
         public async Task<int> GetCurrentBlockHeight()
         {
             var result = await DoRequest($"{_ninjaSettings.Url}blocks/tip?headerOnly=true");
-            var model = Newtonsoft.Json.JsonConvert.DeserializeObject<BlockModel>(result);
+            var model = JsonConvert.DeserializeObject<BlockModel>(result);
 
             return model.AdditionalInformation.Height;
         }
