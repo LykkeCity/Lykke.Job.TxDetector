@@ -71,7 +71,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                 _currentBlockHeight = await _srvBlockchainReader.GetCurrentBlockHeight();
                 await _walletCredentialsRepository.ScanAllAsync(HandleWallets);
             }
-            catch (Exception exc)
+            catch (TaskCanceledException exc)
             {
                 await _log.WriteWarningAsync(
                     nameof(TxDetector),
