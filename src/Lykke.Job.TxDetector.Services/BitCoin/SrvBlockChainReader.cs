@@ -65,7 +65,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
 
                 return result;
             }
-            catch (TaskCanceledException exc)
+            catch (Exception exc) when (exc is TaskCanceledException || exc is WebException)
             {
                 await _log.WriteWarningAsync(
                     nameof(TxDetector),
@@ -87,7 +87,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
 
                 return contract.Block.Confirmations;
             }
-            catch (TaskCanceledException exc)
+            catch (Exception exc) when (exc is TaskCanceledException || exc is WebException)
             {
                 await _log.WriteWarningAsync(
                     nameof(TxDetector),
