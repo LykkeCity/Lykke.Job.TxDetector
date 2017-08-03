@@ -66,8 +66,20 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
                 $"Scan started at:{dtStart}");
 
-            _currentBlockHeight = await _srvBlockchainReader.GetCurrentBlockHeight();
-            await _walletCredentialsRepository.ScanAllAsync(HandleWallets);
+            try
+            {
+                _currentBlockHeight = await _srvBlockchainReader.GetCurrentBlockHeight();
+                await _walletCredentialsRepository.ScanAllAsync(HandleWallets);
+            }
+            catch (TaskCanceledException exc)
+            {
+                await _log.WriteWarningAsync(
+                    nameof(TxDetector),
+                    nameof(WalletsScannerFunctions),
+                    nameof(ScanClients),
+                    exc.GetBaseException().Message,
+                    DateTime.UtcNow);
+            }
 
             await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
                 $"Scan finised. Scan duration: {DateTime.UtcNow - dtStart}");

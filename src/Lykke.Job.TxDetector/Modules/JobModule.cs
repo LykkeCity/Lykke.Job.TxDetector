@@ -5,6 +5,7 @@ using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.ResolveAnything;
 using AzureStorage.Queue;
 using AzureStorage.Tables;
+using AzureStorage.Tables.Decorators;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
@@ -126,7 +127,9 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
-                    new AzureTableStorage<LastProcessedBlockEntity>(_dbSettings.BitCoinQueueConnectionString, "LastProcessedBlocks", _log)));
+                    new RetryOnFailureAzureTableStorageDecorator<LastProcessedBlockEntity>(
+                        new AzureTableStorage<LastProcessedBlockEntity>(_dbSettings.BitCoinQueueConnectionString, "LastProcessedBlocks", _log),
+                        onGettingRetryCount: 5)));
 
             builder.RegisterInstance<IInternalOperationsRepository>(
                 new InternalOperationsRepository(
