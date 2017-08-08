@@ -10,7 +10,6 @@ using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
-using Lykke.Job.TxDetector.AzureRepositories.CachOperations;
 using Lykke.Job.TxDetector.AzureRepositories.Clients;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
 using Lykke.Job.TxDetector.AzureRepositories.PaymentSystems;
@@ -18,7 +17,6 @@ using Lykke.Job.TxDetector.AzureRepositories.Settings;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
-using Lykke.Job.TxDetector.Core.Domain.CashOperations;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
@@ -35,6 +33,7 @@ using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
+using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -101,6 +100,8 @@ namespace Lykke.Job.TxDetector.Modules
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
 
             builder.RegisterSource(new AnyConcreteTypeNotAlreadyRegisteredSource());
+
+            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log);
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -142,15 +143,6 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterInstance<IAppGlobalSettingsRepositry>(
                 new AppGlobalSettingsRepository(
                     new AzureTableStorage<AppGlobalSettingsEntity>(_dbSettings.ClientPersonalInfoConnString, "Setup", _log)));
-
-            builder.RegisterInstance<ICashOperationsRepository>(
-                new CashOperationsRepository(
-                    new AzureTableStorage<CashInOutOperationEntity>(_dbSettings.ClientPersonalInfoConnString, "OperationsCash", _log),
-                    new AzureTableStorage<AzureIndex>(_dbSettings.ClientPersonalInfoConnString, "OperationsCash", _log)));
-
-            builder.RegisterInstance<IClientTradesRepository>(
-                new ClientTradesRepository(
-                    new AzureTableStorage<ClientTradeEntity>(_dbSettings.HTradesConnString, "Trades", _log)));
 
             builder.RegisterInstance<IClientAccountsRepository>(
                 new ClientsRepository(
