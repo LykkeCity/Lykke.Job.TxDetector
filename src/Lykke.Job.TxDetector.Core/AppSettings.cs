@@ -84,6 +84,7 @@ namespace Lykke.Job.TxDetector.Core
         public class OperationsRepositoryClientSettings
         {
             public string ServiceUrl { get; set; }
+            public int RequestTimeout { get; set; }
         }
     }
 
