@@ -7,7 +7,6 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="1.1.79" />
     <PackageReference Include="Lykke.Service.Assets.Client" Version="1.0.15" />
-    <PackageReference Include="Lykke.Service.OperationsHistory.HistoryWriter" Version="1.0.15" />
   </ItemGroup>
 
 </Project>
