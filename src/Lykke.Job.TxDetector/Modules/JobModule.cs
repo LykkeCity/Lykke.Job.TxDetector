@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.ResolveAnything;
@@ -72,8 +71,8 @@ namespace Lykke.Job.TxDetector.Modules
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(30)));
 
-            // NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
-            // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
+            //// NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
+            //// builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
             _services.UseAssetsClient(new AssetServiceSettings
             {
@@ -98,8 +97,6 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
-
-            builder.RegisterSource(new AnyConcreteTypeNotAlreadyRegisteredSource());
 
             builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
                 _settings.OperationsRepositoryClient.RequestTimeout);
