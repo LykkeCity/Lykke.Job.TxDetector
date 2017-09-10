@@ -100,6 +100,8 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
                 _settings.OperationsRepositoryClient.RequestTimeout);
+
+            builder.RegisterSource(new AnyConcreteTypeNotAlreadyRegisteredSource());
         }
 
         private void BindRepositories(ContainerBuilder builder)
