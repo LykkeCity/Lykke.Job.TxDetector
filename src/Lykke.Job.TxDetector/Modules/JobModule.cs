@@ -1,7 +1,6 @@
 ﻿using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Autofac.Features.ResolveAnything;
 using AzureStorage.Queue;
 using AzureStorage.Tables;
 using AzureStorage.Tables.Decorators;
@@ -30,6 +29,7 @@ using Lykke.Job.TxDetector.Services.BitCoin;
 using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
+using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
@@ -101,7 +101,8 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
                 _settings.OperationsRepositoryClient.RequestTimeout);
 
-            builder.RegisterSource(new AnyConcreteTypeNotAlreadyRegisteredSource());
+            builder.Register(ctx => new TransferHandler(ctx.Resolve<IPaymentTransactionsRepository>(),
+                ctx.Resolve<IPaymentTransactionEventsLog>()));
         }
 
         private void BindRepositories(ContainerBuilder builder)
