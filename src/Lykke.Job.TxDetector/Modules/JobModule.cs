@@ -30,9 +30,11 @@ using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
+using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
+using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -103,6 +105,11 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.Register(ctx => new TransferHandler(ctx.Resolve<IPaymentTransactionsRepository>(),
                 ctx.Resolve<IPaymentTransactionEventsLog>()));
+
+            builder.Register(ctx => new CashInHandler(ctx.Resolve<IAppNotifications>(),
+                ctx.Resolve<IMatchingEngineClient>(), ctx.Resolve<ICashOperationsRepositoryClient>(),
+                ctx.Resolve<IClientAccountsRepository>(), ctx.Resolve<ISrvEmailsFacade>(),
+                ctx.Resolve<IClientSettingsRepository>()));
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -171,7 +178,7 @@ namespace Lykke.Job.TxDetector.Modules
             var socketLog = new SocketLogDynamic(i => { },
                 str => Console.WriteLine(DateTime.UtcNow.ToIsoDateTime() + ": " + str));
 
-            container.BindMeConnector(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
+            container.BindMeClient(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
         }
     }
 }
