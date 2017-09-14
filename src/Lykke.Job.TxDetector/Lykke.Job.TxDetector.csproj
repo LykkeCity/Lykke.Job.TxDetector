@@ -23,7 +23,7 @@
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
     <PackageReference Include="Lykke.JobTriggers" Version="1.1.11" />
     <PackageReference Include="Lykke.Logs" Version="1.0.33" />
-    <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.77" />
+    <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.79" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0" />
