@@ -74,6 +74,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                     {
                         foreach (var id in operation.OperationIds)
                         {
+                            if (string.IsNullOrWhiteSpace(id))
+                                continue;
+
                             await _transferHandler.HandleTransferOperation(id, tx.ClientId);
                         }
                     }
