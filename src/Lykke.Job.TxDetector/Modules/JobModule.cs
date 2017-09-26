@@ -33,6 +33,7 @@ using Lykke.Job.TxDetector.Services.BitCoin;
 using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
+using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
 using Microsoft.Extensions.DependencyInjection;
@@ -97,6 +98,9 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<SrvEmailsFacade>().As<ISrvEmailsFacade>().SingleInstance();
 
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
+
+            builder.RegisterType<CashInHandler>().SingleInstance();
+            builder.RegisterType<TransferHandler>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
         }
