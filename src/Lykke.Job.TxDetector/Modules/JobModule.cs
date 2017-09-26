@@ -103,13 +103,9 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
                 _settings.OperationsRepositoryClient.RequestTimeout);
 
-            builder.Register(ctx => new TransferHandler(ctx.Resolve<IPaymentTransactionsRepository>(),
-                ctx.Resolve<IPaymentTransactionEventsLog>()));
+            builder.RegisterType<TransferHandler>().SingleInstance();
 
-            builder.Register(ctx => new CashInHandler(ctx.Resolve<IAppNotifications>(),
-                ctx.Resolve<IMatchingEngineClient>(), ctx.Resolve<ICashOperationsRepositoryClient>(),
-                ctx.Resolve<IClientAccountsRepository>(), ctx.Resolve<ISrvEmailsFacade>(),
-                ctx.Resolve<IClientSettingsRepository>()));
+            builder.RegisterType<CashInHandler>().SingleInstance();
         }
 
         private void BindRepositories(ContainerBuilder builder)
