@@ -7,6 +7,7 @@ using AzureStorage.Tables.Decorators;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
+using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
 using Lykke.Job.TxDetector.AzureRepositories.Clients;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
@@ -41,16 +42,16 @@ namespace Lykke.Job.TxDetector.Modules
 {
     public class JobModule : Module
     {
+        private readonly IReloadingManager<AppSettings> _settingsManager;
         private readonly AppSettings _settings;
-        private readonly AppSettings.DbSettings _dbSettings;
         private readonly ILog _log;
         // NOTE: you can remove it if you don't need to use IServiceCollection extensions to register service specific dependencies
         private readonly IServiceCollection _services;
 
-        public JobModule(AppSettings settings, ILog log)
+        public JobModule(IReloadingManager<AppSettings> settingsManager, ILog log)
         {
-            _settings = settings;
-            _dbSettings = settings.TxDetectorJob.Db;
+            _settingsManager = settingsManager;
+            _settings = settingsManager.CurrentValue;
             _log = log;
 
             _services = new ServiceCollection();
@@ -100,77 +101,89 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
 
+            builder.RegisterType<TransferHandler>().SingleInstance();
+
+            builder.RegisterType<CashInHandler>().SingleInstance();
+
             builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
                 _settings.OperationsRepositoryClient.RequestTimeout);
-
-            builder.Register(ctx => new TransferHandler(ctx.Resolve<IPaymentTransactionsRepository>(),
-                ctx.Resolve<IPaymentTransactionEventsLog>()));
-
-            builder.Register(ctx => new CashInHandler(ctx.Resolve<IAppNotifications>(),
-                ctx.Resolve<IMatchingEngineClient>(), ctx.Resolve<ICashOperationsRepositoryClient>(),
-                ctx.Resolve<IClientAccountsRepository>(), ctx.Resolve<ISrvEmailsFacade>(),
-                ctx.Resolve<IClientSettingsRepository>()));
         }
 
         private void BindRepositories(ContainerBuilder builder)
         {
             builder.RegisterInstance<IPostponedCashInRepository>(
                 new PostponedCashInRepository(
-                    new AzureTableStorage<PostponedCashInRecord>(_dbSettings.BitCoinQueueConnectionString, "PostponedBtcCashIns", _log)));
+                    AzureTableStorage<PostponedCashInRecord>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "PostponedBtcCashIns", _log)));
 
             builder.RegisterInstance<IConfirmedTransactionsRepository>(
                 new ConfirmedTransactionsRepository(
-                    new AzureTableStorage<ConfirmedTransactionRecord>(_dbSettings.BitCoinQueueConnectionString, "ConfirmedTransactions", _log)));
+                    AzureTableStorage<ConfirmedTransactionRecord>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "ConfirmedTransactions", _log)));
 
             builder.RegisterInstance<IBalanceChangeTransactionsRepository>(
                 new BalanceChangeTransactionsRepository(
-                    new AzureTableStorage<BalanceChangeTransactionEntity>(_dbSettings.BitCoinQueueConnectionString, "BalanceChangeTransactions", _log)));
+                    AzureTableStorage<BalanceChangeTransactionEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "BalanceChangeTransactions", _log)));
 
             builder.RegisterInstance<IBlockchainTransactionsCache>(
                 new BlockchainTransactionsCache(
-                    new AzureTableStorage<ObsoleteBlockchainTransactionsCacheItem>(_dbSettings.BitCoinQueueConnectionString, "Transactions", _log)));
+                    AzureTableStorage<ObsoleteBlockchainTransactionsCacheItem>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "Transactions", _log)));
 
             builder.RegisterInstance<IConfirmPendingTxsQueue>(
                 new ConfirmPendingTxsQueue(
-                    new AzureQueueExt(_dbSettings.BitCoinQueueConnectionString, "txs-confirm-pending")));
+                    AzureQueueExt.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "txs-confirm-pending")));
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
                     new RetryOnFailureAzureTableStorageDecorator<LastProcessedBlockEntity>(
-                        new AzureTableStorage<LastProcessedBlockEntity>(_dbSettings.BitCoinQueueConnectionString, "LastProcessedBlocks", _log),
+                        AzureTableStorage<LastProcessedBlockEntity>.Create(
+                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log),
                         onGettingRetryCount: 5)));
 
             builder.RegisterInstance<IInternalOperationsRepository>(
                 new InternalOperationsRepository(
-                    new AzureTableStorage<InternalOperationEntity>(_dbSettings.BitCoinQueueConnectionString, "InternalOperations", _log)));
+                    AzureTableStorage<InternalOperationEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "InternalOperations", _log)));
 
             builder.RegisterInstance<IWalletCredentialsRepository>(
                 new WalletCredentialsRepository(
-                    new AzureTableStorage<WalletCredentialsEntity>(_dbSettings.ClientPersonalInfoConnString, "WalletCredentials", _log)));
+                    AzureTableStorage<WalletCredentialsEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "WalletCredentials", _log)));
 
             builder.RegisterInstance<IAppGlobalSettingsRepositry>(
                 new AppGlobalSettingsRepository(
-                    new AzureTableStorage<AppGlobalSettingsEntity>(_dbSettings.ClientPersonalInfoConnString, "Setup", _log)));
+                    AzureTableStorage<AppGlobalSettingsEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
 
             builder.RegisterInstance<IClientAccountsRepository>(
                 new ClientsRepository(
-                    new AzureTableStorage<ClientAccountEntity>(_dbSettings.ClientPersonalInfoConnString, "Traders", _log)));
+                    AzureTableStorage<ClientAccountEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Traders", _log)));
 
             builder.RegisterInstance<IClientSettingsRepository>(
-                new ClientSettingsRepository(new AzureTableStorage<ClientSettingsEntity>(_dbSettings.ClientPersonalInfoConnString, "TraderSettings", _log)));
+                new ClientSettingsRepository(
+                    AzureTableStorage<ClientSettingsEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "TraderSettings", _log)));
 
             builder.RegisterInstance<IEmailCommandProducer>(
                 new EmailCommandProducer(
-                    new AzureQueueExt(_dbSettings.ClientPersonalInfoConnString, "emailsqueue")));
+                    AzureQueueExt.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "emailsqueue")));
 
             builder.RegisterInstance<IPaymentTransactionEventsLog>(
                 new PaymentTransactionEventsLog(
-                    new AzureTableStorage<PaymentTransactionLogEventEntity>(_dbSettings.LogsConnString, "PaymentsLog", _log)));
+                    AzureTableStorage<PaymentTransactionLogEventEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.LogsConnString), "PaymentsLog", _log)));
 
             builder.RegisterInstance<IPaymentTransactionsRepository>(
                 new PaymentTransactionsRepository(
-                        new AzureTableStorage<PaymentTransactionEntity>(_dbSettings.ClientPersonalInfoConnString, "PaymentTransactions", _log), 
-                        new AzureTableStorage<AzureMultiIndex>(_dbSettings.ClientPersonalInfoConnString, "PaymentTransactions", _log)));
+                    AzureTableStorage<PaymentTransactionEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log), 
+                    AzureTableStorage<AzureMultiIndex>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log)));
         }
 
         private void BindMatchingEngineChannel(ContainerBuilder container)
