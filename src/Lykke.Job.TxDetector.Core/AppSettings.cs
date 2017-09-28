@@ -5,6 +5,7 @@ namespace Lykke.Job.TxDetector.Core
 {
     public class AppSettings
     {
+        public OperationsRepositoryClientSettings OperationsRepositoryClient { get; set; }
         public TxDetectorSettings TxDetectorJob { get; set; }
         public SlackNotificationsSettings SlackNotifications { get; set; }
         public AssetsSettings Assets { get; set; }
@@ -82,6 +83,12 @@ namespace Lykke.Job.TxDetector.Core
             public string ConnectionString { get; set; }
 
             public string QueueName { get; set; }
+        }
+
+        public class OperationsRepositoryClientSettings
+        {
+            public string ServiceUrl { get; set; }
+            public int RequestTimeout { get; set; }
         }
     }
 

@@ -9,7 +9,6 @@ using Common;
 using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
-using Lykke.Job.TxDetector.AzureRepositories.CachOperations;
 using Lykke.Job.TxDetector.AzureRepositories.Clients;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
 using Lykke.Job.TxDetector.AzureRepositories.PaymentSystems;
@@ -17,7 +16,6 @@ using Lykke.Job.TxDetector.AzureRepositories.Settings;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
-using Lykke.Job.TxDetector.Core.Domain.CashOperations;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
@@ -33,8 +31,11 @@ using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
+using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
+using Lykke.Service.OperationsRepository.Client;
+using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -73,8 +74,8 @@ namespace Lykke.Job.TxDetector.Modules
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(30)));
 
-            // NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
-            // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
+            //// NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
+            //// builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
             _services.UseAssetsClient(new AssetServiceSettings
             {
@@ -103,6 +104,9 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<TransferHandler>().SingleInstance();
 
             builder.RegisterType<CashInHandler>().SingleInstance();
+
+            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
+                _settings.OperationsRepositoryClient.RequestTimeout);
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -154,18 +158,6 @@ namespace Lykke.Job.TxDetector.Modules
                     AzureTableStorage<AppGlobalSettingsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
 
-            builder.RegisterInstance<ICashOperationsRepository>(
-                new CashOperationsRepository(
-                    AzureTableStorage<CashInOutOperationEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "OperationsCash", _log),
-                    AzureTableStorage<AzureIndex>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "OperationsCash", _log)));
-
-            builder.RegisterInstance<IClientTradesRepository>(
-                new ClientTradesRepository(
-                    AzureTableStorage<ClientTradeEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.HTradesConnString), "Trades", _log)));
-
             builder.RegisterInstance<IClientAccountsRepository>(
                 new ClientsRepository(
                     AzureTableStorage<ClientAccountEntity>.Create(
@@ -199,7 +191,7 @@ namespace Lykke.Job.TxDetector.Modules
             var socketLog = new SocketLogDynamic(i => { },
                 str => Console.WriteLine(DateTime.UtcNow.ToIsoDateTime() + ": " + str));
 
-            container.BindMeConnector(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
+            container.BindMeClient(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
         }
     }
 }
