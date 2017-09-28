@@ -101,12 +101,12 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
 
-            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
-                _settings.OperationsRepositoryClient.RequestTimeout);
-
             builder.RegisterType<TransferHandler>().SingleInstance();
 
             builder.RegisterType<CashInHandler>().SingleInstance();
+
+            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
+                _settings.OperationsRepositoryClient.RequestTimeout);
         }
 
         private void BindRepositories(ContainerBuilder builder)
