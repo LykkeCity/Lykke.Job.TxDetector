@@ -118,26 +118,15 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             var newTransactions = (await _srvBlockchainReader.GetBalanceChangesByAddressAsync(walletCredentials.MultiSig, lastProcessedBlockHeight))
                 .ToArray();
 
-            var alreadyProcessedHashes = new List<string>();
-            if (lastProcessedBlockHeight == 0)
-            {
-                //Processed in old version
-                //ToDo: can be safely removed later
-                alreadyProcessedHashes =
-                    (await _blockchainTransactionsCache.GetAllAsync(walletCredentials.MultiSig)).Select(x => x.TxId)
-                    .ToList();
-            }
-
             foreach (var tx in newTransactions)
             {
                 var balanceChangeTx = BalanceChangeTransaction.Create(tx,
                     walletCredentials.ClientId, walletCredentials.MultiSig);
 
                 //check if transaction was already proccessed (ninja issue https://github.com/MetacoSA/QBitNinja/issues/24 or some fail during processing occured)
-                var shouldBeProcessed =
-                    await _balanceChangeTransactionsRepository.InsertIfNotExistsAsync(balanceChangeTx);
+                var shouldBeProcessed = await _balanceChangeTransactionsRepository.InsertIfNotExistsAsync(balanceChangeTx);
 
-                if (!alreadyProcessedHashes.Contains(tx.Hash) && shouldBeProcessed)
+                if (shouldBeProcessed)
                     await HandleDetectedTransaction(walletCredentials, tx, balanceChangeTx);
             }
 
