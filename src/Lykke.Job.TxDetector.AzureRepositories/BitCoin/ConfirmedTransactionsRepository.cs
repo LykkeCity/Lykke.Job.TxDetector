@@ -7,9 +7,9 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
 {
     public class ConfirmedTransactionRecord : TableEntity
     {
-        public static string GeneratePartitionKey()
+        public static string GeneratePartitionKey(string clientId)
         {
-            return "T";
+            return clientId;
         }
 
         public static string GenerateRowKey(string hash)
@@ -17,11 +17,11 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             return hash;
         }
 
-        public static ConfirmedTransactionRecord Create(string hash)
+        public static ConfirmedTransactionRecord Create(string hash, string clientId)
         {
             return new ConfirmedTransactionRecord
             {
-                PartitionKey = GeneratePartitionKey(),
+                PartitionKey = GeneratePartitionKey(clientId),
                 RowKey = GenerateRowKey(hash)
             };
         }
@@ -36,9 +36,14 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             _tableStorage = tableStorage;
         }
 
-        public Task<bool> SaveConfirmedIfNotExist(string hash)
+        public async Task<bool> SaveConfirmedIfNotExist(string hash, string clientId)
         {
-            return _tableStorage.CreateIfNotExistsAsync(ConfirmedTransactionRecord.Create(hash));
+            // processed in old version (can be removed later)
+            const string oldParitionKey = "T";
+            if (await _tableStorage.GetDataAsync(oldParitionKey, hash) != null)
+                return false;
+
+            return await _tableStorage.CreateIfNotExistsAsync(ConfirmedTransactionRecord.Create(hash, clientId));
         }
     }
 }
