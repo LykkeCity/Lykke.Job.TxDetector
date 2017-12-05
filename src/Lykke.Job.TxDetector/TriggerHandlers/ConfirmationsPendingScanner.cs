@@ -59,16 +59,16 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
 
             if (confirmations >= _settings.TxDetectorConfirmationsLimit)
             {
-                var alreadyProcessed = !await _confirmedTransactionsRepository.SaveConfirmedIfNotExist(txMsg.Hash);
-
-                if (alreadyProcessed)
-                    return;
-
                 var balanceChangeTransaction = await _balanceChangeTransactionsRepository.GetAsync(txMsg.Hash);
+
+                var operation = await _internalOperationsRepository.GetAsync(txMsg.Hash);
 
                 foreach (var tx in balanceChangeTransaction)
                 {
-                    var operation = await _internalOperationsRepository.GetAsync(txMsg.Hash);
+                    var alreadyProcessed = !await _confirmedTransactionsRepository.SaveConfirmedIfNotExist(txMsg.Hash, tx.ClientId);
+
+                    if (alreadyProcessed)
+                        continue;
 
                     if (operation != null && operation.CommandType == BitCoinCommands.Transfer)
                     {
@@ -94,7 +94,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                                 if (asset.Id == LykkeConstants.BitcoinAssetId && skipBtc)
                                 {
                                     await _postponedCashInRepository.SaveAsync(tx.Hash);
-                                    return;
+                                    continue;
                                 }
 
                                 double sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
