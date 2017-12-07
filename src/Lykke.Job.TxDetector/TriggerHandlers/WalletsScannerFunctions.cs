@@ -7,10 +7,10 @@ using Common;
 using Common.Log;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
-using Lykke.Job.TxDetector.Core.Domain.CashOperations;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.JobTriggers.Triggers.Attributes;
+using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 
 namespace Lykke.Job.TxDetector.TriggerHandlers
 {
@@ -18,7 +18,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
     {
         private readonly IWalletCredentialsRepository _walletCredentialsRepository;
         private readonly ISrvBlockchainReader _srvBlockchainReader;
-        private readonly IClientTradesRepository _clientTradesRepository;
+        private readonly ITradeOperationsRepositoryClient _clientTradesRepositoryClient;
         private readonly ILog _log;
         private readonly IInternalOperationsRepository _internalOperationsRepository;
         private readonly ILastProcessedBlockRepository _lastProcessedBlockRepository;
@@ -31,7 +31,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private int _currentBlockHeight;
 
         public WalletsScannerFunctions(IWalletCredentialsRepository walletCredentialsRepository,
-            ISrvBlockchainReader srvBlockchainReader, IClientTradesRepository clientTradesRepository,
+            ISrvBlockchainReader srvBlockchainReader, ITradeOperationsRepositoryClient clientTradesRepositoryClient,
             ILog log, IInternalOperationsRepository internalOperationsRepository,
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             IConfirmPendingTxsQueue confirmPendingTxsQueue,
@@ -41,7 +41,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         {
             _walletCredentialsRepository = walletCredentialsRepository;
             _srvBlockchainReader = srvBlockchainReader;
-            _clientTradesRepository = clientTradesRepository;
+            _clientTradesRepositoryClient = clientTradesRepositoryClient;
             _log = log;
             _internalOperationsRepository = internalOperationsRepository;
             _lastProcessedBlockRepository = lastProcessedBlockRepository;
@@ -142,8 +142,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             {
                 foreach (var id in internalOperation.OperationIds)
                 {
-                    await
-                        _clientTradesRepository.SetDetectionTimeAndConfirmations(
+                    await  _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
                             walletCredentials.ClientId, id, DateTime.UtcNow,
                             tx.Confirmations);
                 }

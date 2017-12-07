@@ -2,13 +2,14 @@
 using System.Threading.Tasks;
 using Common;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
-using Lykke.Job.TxDetector.Core.Domain.CashOperations;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Services.Messages;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Resources;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.Service.Assets.Client.Custom;
+using Lykke.Service.OperationsRepository.AutorestClient.Models;
+using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 
 namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
 {
@@ -16,7 +17,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
     {
         private readonly IAppNotifications _appNotifications;
         private readonly IMatchingEngineConnector _matchingEngineConnector;
-        private readonly ICashOperationsRepository _cashOperationsRepository;
+        private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
         private readonly IClientAccountsRepository _clientAccountsRepository;
         private readonly ISrvEmailsFacade _srvEmailsFacade;
         private readonly IClientSettingsRepository _clientSettingsRepository;
@@ -24,14 +25,14 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
         public CashInHandler(
             IAppNotifications appNotifications,
             IMatchingEngineConnector matchingEngineConnector,
-            ICashOperationsRepository cashOperationsRepository,
+            ICashOperationsRepositoryClient cashOperationsRepositoryClient,
             IClientAccountsRepository clientAccountsRepository,
             ISrvEmailsFacade srvEmailsFacade,
             IClientSettingsRepository clientSettingsRepository)
         {
             _appNotifications = appNotifications;
             _matchingEngineConnector = matchingEngineConnector;
-            _cashOperationsRepository = cashOperationsRepository;
+            _cashOperationsRepositoryClient = cashOperationsRepositoryClient;
             _clientAccountsRepository = clientAccountsRepository;
             _srvEmailsFacade = srvEmailsFacade;
             _clientSettingsRepository = clientSettingsRepository;
@@ -43,7 +44,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
 
             await _matchingEngineConnector.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
 
-            await _cashOperationsRepository.RegisterAsync(new CashInOutOperation
+            await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
             {
                 Id = id,
                 ClientId = balanceChangeTx.ClientId,

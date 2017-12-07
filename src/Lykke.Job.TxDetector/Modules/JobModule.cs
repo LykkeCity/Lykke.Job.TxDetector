@@ -9,7 +9,6 @@ using Common;
 using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
-using Lykke.Job.TxDetector.AzureRepositories.CachOperations;
 using Lykke.Job.TxDetector.AzureRepositories.Clients;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
 using Lykke.Job.TxDetector.AzureRepositories.PaymentSystems;
@@ -17,7 +16,6 @@ using Lykke.Job.TxDetector.AzureRepositories.Settings;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
-using Lykke.Job.TxDetector.Core.Domain.CashOperations;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
@@ -35,6 +33,7 @@ using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
+using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -72,6 +71,8 @@ namespace Lykke.Job.TxDetector.Modules
                 .As<IHealthService>()
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(30)));
+
+            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryServiceClient, _log);
 
             // NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
             // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
@@ -134,10 +135,8 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
-                    new RetryOnFailureAzureTableStorageDecorator<LastProcessedBlockEntity>(
                         AzureTableStorage<LastProcessedBlockEntity>.Create(
-                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log),
-                        onGettingRetryCount: 5)));
+                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log)));
 
             builder.RegisterInstance<IInternalOperationsRepository>(
                 new InternalOperationsRepository(
@@ -153,18 +152,6 @@ namespace Lykke.Job.TxDetector.Modules
                 new AppGlobalSettingsRepository(
                     AzureTableStorage<AppGlobalSettingsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
-
-            builder.RegisterInstance<ICashOperationsRepository>(
-                new CashOperationsRepository(
-                    AzureTableStorage<CashInOutOperationEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "OperationsCash", _log),
-                    AzureTableStorage<AzureIndex>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "OperationsCash", _log)));
-
-            builder.RegisterInstance<IClientTradesRepository>(
-                new ClientTradesRepository(
-                    AzureTableStorage<ClientTradeEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.HTradesConnString), "Trades", _log)));
 
             builder.RegisterInstance<IClientAccountsRepository>(
                 new ClientsRepository(
