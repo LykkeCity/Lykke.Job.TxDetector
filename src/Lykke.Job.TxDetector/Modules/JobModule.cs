@@ -3,7 +3,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
 using AzureStorage.Tables;
-using AzureStorage.Tables.Decorators;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
@@ -31,11 +30,9 @@ using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
-using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
-using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -74,8 +71,10 @@ namespace Lykke.Job.TxDetector.Modules
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(30)));
 
-            //// NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
-            //// builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
+            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryServiceClient, _log);
+
+            // NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
+            // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
             _services.UseAssetsClient(new AssetServiceSettings
             {
@@ -104,9 +103,6 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<TransferHandler>().SingleInstance();
 
             builder.RegisterType<CashInHandler>().SingleInstance();
-
-            builder.RegisterOperationsRepositoryClients(_settings.OperationsRepositoryClient.ServiceUrl, _log,
-                _settings.OperationsRepositoryClient.RequestTimeout);
         }
 
         private void BindRepositories(ContainerBuilder builder)

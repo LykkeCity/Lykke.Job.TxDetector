@@ -16,7 +16,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
     public class CashInHandler
     {
         private readonly IAppNotifications _appNotifications;
-        private readonly IMatchingEngineClient _matchingEngineConnector;
+        private readonly IMatchingEngineConnector _matchingEngineConnector;
         private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
         private readonly IClientAccountsRepository _clientAccountsRepository;
         private readonly ISrvEmailsFacade _srvEmailsFacade;
@@ -24,7 +24,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
 
         public CashInHandler(
             IAppNotifications appNotifications,
-            IMatchingEngineClient matchingEngineConnector,
+            IMatchingEngineConnector matchingEngineConnector,
             ICashOperationsRepositoryClient cashOperationsRepositoryClient,
             IClientAccountsRepository clientAccountsRepository,
             ISrvEmailsFacade srvEmailsFacade,

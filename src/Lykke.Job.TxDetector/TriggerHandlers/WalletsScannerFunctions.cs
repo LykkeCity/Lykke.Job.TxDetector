@@ -83,20 +83,26 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             }
 
             await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
-                $"Scan finished. Scan duration: {DateTime.UtcNow - dtStart}");
+                $"Scan finised. Scan duration: {DateTime.UtcNow - dtStart}");
         }
 
         private async Task HandleWallets(IEnumerable<IWalletCredentials> walletCredentials)
         {
             foreach (var chunk in walletCredentials.ToChunks(_txDetectorSettings.ProcessInParallelCount))
             {
+                var tasks = new List<Task>();
+                foreach (var item in chunk)
+                {
+                    tasks.Add(HandleWallet(item));
+                }
+
                 try
                 {
-                    await Task.WhenAll(chunk.Select(HandleWallet));
+                    await Task.WhenAll(tasks);
                 }
                 catch (Exception ex)
                 {
-                    await _log.WriteWarningAsync(nameof(WalletsScannerFunctions), nameof(HandleWallets), $"Unable to handle wallets. Will try next time. Error: {ex}");
+                    await _log.WriteErrorAsync(nameof(WalletsScannerFunctions), nameof(HandleWallets), "", ex);
                 }
             }
         }
@@ -136,8 +142,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             {
                 foreach (var id in internalOperation.OperationIds)
                 {
-                    await
-                        _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
+                    await  _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
                             walletCredentials.ClientId, id, DateTime.UtcNow,
                             tx.Confirmations);
                 }

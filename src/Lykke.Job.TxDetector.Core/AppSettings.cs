@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Net;
+using Lykke.Service.OperationsRepository.Client;
 
 namespace Lykke.Job.TxDetector.Core
 {
     public class AppSettings
     {
-        public OperationsRepositoryClientSettings OperationsRepositoryClient { get; set; }
         public TxDetectorSettings TxDetectorJob { get; set; }
         public SlackNotificationsSettings SlackNotifications { get; set; }
         public AssetsSettings Assets { get; set; }
+        public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
 
         public class TxDetectorSettings
         {
