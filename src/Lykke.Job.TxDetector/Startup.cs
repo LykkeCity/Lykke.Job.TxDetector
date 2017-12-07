@@ -12,6 +12,7 @@ using Lykke.Job.TxDetector.Modules;
 using Lykke.JobTriggers.Extenstions;
 using Lykke.JobTriggers.Triggers;
 using Lykke.Logs;
+using Lykke.Logs.Slack;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
@@ -100,7 +101,11 @@ namespace Lykke.Job.TxDetector
 
             app.UseMvc();
             app.UseSwagger();
-            app.UseSwaggerUi();
+            app.UseSwaggerUI(x =>
+            {
+                x.RoutePrefix = "swagger/ui";
+                x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
             app.UseStaticFiles();
 
             appLifetime.ApplicationStarted.Register(Start);
@@ -165,6 +170,8 @@ namespace Lykke.Job.TxDetector
                 new LykkeLogToAzureSlackNotificationsManager(
                     $"{AppName} {PlatformServices.Default.Application.ApplicationVersion}", slackService, logToConsole));
 
+            var logToSlack = LykkeLogToSlack.Create(slackService, "TxDetector");
+            logAggregate.AddLogger(logToSlack);
             logToAzureStorage?.Start();
 
             return log;

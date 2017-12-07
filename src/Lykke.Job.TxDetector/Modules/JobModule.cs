@@ -137,11 +137,8 @@ namespace Lykke.Job.TxDetector.Modules
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "txs-confirm-pending")));
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
-                new LastProcessedBlockRepository(
-                    new RetryOnFailureAzureTableStorageDecorator<LastProcessedBlockEntity>(
-                        AzureTableStorage<LastProcessedBlockEntity>.Create(
-                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log),
-                        onGettingRetryCount: 5)));
+                new LastProcessedBlockRepository(AzureTableStorage<LastProcessedBlockEntity>.Create(
+                    _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log, retryDelay: TimeSpan.FromSeconds(0.5))));
 
             builder.RegisterInstance<IInternalOperationsRepository>(
                 new InternalOperationsRepository(
@@ -181,7 +178,7 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterInstance<IPaymentTransactionsRepository>(
                 new PaymentTransactionsRepository(
                     AzureTableStorage<PaymentTransactionEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log), 
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log),
                     AzureTableStorage<AzureMultiIndex>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log)));
         }
