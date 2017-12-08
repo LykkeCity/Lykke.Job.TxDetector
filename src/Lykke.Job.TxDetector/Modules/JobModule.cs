@@ -134,10 +134,8 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
-                    new RetryOnFailureAzureTableStorageDecorator<LastProcessedBlockEntity>(
-                        AzureTableStorage<LastProcessedBlockEntity>.Create(
-                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log),
-                        onGettingRetryCount: 5)));
+                    AzureTableStorage<LastProcessedBlockEntity>.Create(
+                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log)));
 
             builder.RegisterInstance<IInternalOperationsRepository>(
                 new InternalOperationsRepository(
