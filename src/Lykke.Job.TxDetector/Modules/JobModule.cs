@@ -133,8 +133,9 @@ namespace Lykke.Job.TxDetector.Modules
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "txs-confirm-pending")));
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
-                new LastProcessedBlockRepository(AzureTableStorage<LastProcessedBlockEntity>.Create(
-                    _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log, retryDelay: TimeSpan.FromSeconds(0.5))));
+                new LastProcessedBlockRepository(
+                    AzureTableStorage<LastProcessedBlockEntity>.Create(
+                            _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "LastProcessedBlocks", _log)));
 
             builder.RegisterInstance<IInternalOperationsRepository>(
                 new InternalOperationsRepository(
