@@ -170,8 +170,9 @@ namespace Lykke.Job.TxDetector
 
             var logToSlack = LykkeLogToSlack.Create(slackService, "TxDetector");
             logAggregate.AddLogger(logToSlack);
-            logToAzureStorage?.Start();
+            log = logAggregate.CreateLogger();
 
+            logToAzureStorage?.Start();
             return log;
         }
     }
