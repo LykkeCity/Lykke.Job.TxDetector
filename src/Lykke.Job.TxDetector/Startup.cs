@@ -62,9 +62,7 @@ namespace Lykke.Job.TxDetector
             });
 
             var builder = new ContainerBuilder();
-            IReloadingManager<AppSettings> settingsManager = Environment.IsDevelopment()
-                ? new LocalSettingsReloadingManager<AppSettings>("appsettings.json")
-                : Configuration.LoadSettings<AppSettings>("SettingsUrl");
+            IReloadingManager<AppSettings> settingsManager = Configuration.LoadSettings<AppSettings>();
             var log = CreateLogWithSlack(services, settingsManager);
 
             builder.RegisterModule(new JobModule(settingsManager, log));
