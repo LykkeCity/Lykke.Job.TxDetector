@@ -3,7 +3,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
 using AzureStorage.Tables;
-using AzureStorage.Tables.Decorators;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
