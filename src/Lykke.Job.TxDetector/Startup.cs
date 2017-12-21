@@ -63,14 +63,12 @@ namespace Lykke.Job.TxDetector
                 });
 
                 var builder = new ContainerBuilder();
-                IReloadingManager<AppSettings> settingsManager = Environment.IsDevelopment()
-                    ? new LocalSettingsReloadingManager<AppSettings>("appsettings.json")
-                    : Configuration.LoadSettings<AppSettings>("SettingsUrl");
-                Log = CreateLogWithSlack(services, settingsManager);
+                var appSettings = Configuration.LoadSettings<AppSettings>();
+                Log = CreateLogWithSlack(services, appSettings);
 
-                builder.RegisterModule(new JobModule(settingsManager, Log));
+                builder.RegisterModule(new JobModule(appSettings, Log));
 
-                string bitCoinQueueConnectionString = settingsManager.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
+                var bitCoinQueueConnectionString = appSettings.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
                 if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString))
                 {
                     builder.AddTriggers();
@@ -182,49 +180,43 @@ namespace Lykke.Job.TxDetector
             }
         }
 
-        private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settingsManager)
+        private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
         {
-            LykkeLogToAzureStorage logToAzureStorage = null;
+            var consoleLogger = new LogToConsole();
+            var aggregateLogger = new AggregateLogger();
 
-            var logToConsole = new LogToConsole();
-            var logAggregate = new LogAggregate();
-
-            logAggregate.AddLogger(logToConsole);
-
-            var settings = settingsManager.CurrentValue;
-
-            var dbLogConnectionString = settings.TxDetectorJob.Db.LogsConnString;
-
-            // Creating azure storage logger, which logs own messages to concole log
-            if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
-            {
-                var tableStorage = AzureTableStorage<LogEntity>.Create(
-                    settingsManager.ConnectionString(i => i.TxDetectorJob.Db.LogsConnString), "TxDetectorLog", logToConsole);
-                var persistanceManager = new LykkeLogToAzureStoragePersistenceManager(AppName, tableStorage);
-                logToAzureStorage =
-                    new LykkeLogToAzureStorage(AppName, persistanceManager, lastResortLog: logToConsole);
-
-                logAggregate.AddLogger(logToAzureStorage);
-            }
-
-            // Creating aggregate log, which logs to console and to azure storage, if last one specified
-            var log = logAggregate.CreateLogger();
+            aggregateLogger.AddLog(consoleLogger);
 
             // Creating slack notification service, which logs own azure queue processing messages to aggregate log
             var slackService = services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueIntegration.AzureQueueSettings
             {
-                ConnectionString = settings.SlackNotifications.AzureQueue.ConnectionString,
-                QueueName = settings.SlackNotifications.AzureQueue.QueueName
-            }, log);
+                ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
+            }, aggregateLogger);
 
-            // Finally, setting slack notification for azure storage log, which will forward necessary message to slack service
-            logToAzureStorage?.SetSlackNotificationsManager(
-                new LykkeLogToAzureSlackNotificationsManager(
-                    $"{AppName} {PlatformServices.Default.Application.ApplicationVersion}", slackService, logToConsole));
+            var dbLogConnectionStringManager = settings.Nested(x => x.TxDetectorJob.Db.LogsConnString);
+            var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
 
-            logToAzureStorage?.Start();
+            // Creating azure storage logger, which logs own messages to console log
+            if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
+            {
+                var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
+                    AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, "TxDetectorLog", consoleLogger),
+                    consoleLogger);
 
-            return log;
+                var slackNotificationsManager = new LykkeLogToAzureSlackNotificationsManager(slackService, consoleLogger);
+
+                var azureStorageLogger = new LykkeLogToAzureStorage(
+                    persistenceManager,
+                    slackNotificationsManager,
+                    consoleLogger);
+
+                azureStorageLogger.Start();
+
+                aggregateLogger.AddLog(azureStorageLogger);
+            }
+
+            return aggregateLogger;
         }
     }
 }
