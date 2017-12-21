@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Lykke.Job.TxDetector.Core.Domain.BitCoin;
-using Lykke.Service.Assets.Client.Custom;
 
 namespace Lykke.Job.TxDetector.Core.Services.BitCoin
 {

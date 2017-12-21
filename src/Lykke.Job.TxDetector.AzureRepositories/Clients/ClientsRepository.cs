@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
-using AzureStorage.Tables.Templates.Index;
 using Common.PasswordTools;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Microsoft.WindowsAzure.Storage.Table;
