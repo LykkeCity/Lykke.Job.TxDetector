@@ -130,6 +130,8 @@ namespace Lykke.Job.TxDetector
             {
                 _triggerHost = new TriggerHost(new AutofacServiceProvider(ApplicationContainer));
                 _triggerHostTask = _triggerHost.Start();
+
+                await Log.WriteMonitorAsync("", "", "Started");
             }
             catch (Exception ex)
             {
@@ -176,6 +178,7 @@ namespace Lykke.Job.TxDetector
                 throw;
             }
         }
+
         private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
         {
             var consoleLogger = new LogToConsole();
