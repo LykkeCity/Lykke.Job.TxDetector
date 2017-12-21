@@ -12,6 +12,7 @@ using Lykke.Job.TxDetector.Modules;
 using Lykke.JobTriggers.Extenstions;
 using Lykke.JobTriggers.Triggers;
 using Lykke.Logs;
+using Lykke.Logs.Slack;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
@@ -218,6 +219,9 @@ namespace Lykke.Job.TxDetector
                 persistenceManager,
                 slackNotificationsManager,
                 consoleLogger);
+
+            var logToSlack = LykkeLogToSlack.Create(slackService, "TxDetector");
+            aggregateLogger.AddLog(logToSlack);
 
             azureStorageLogger.Start();
 
