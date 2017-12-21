@@ -3,7 +3,7 @@ using System.Net;
 using Lykke.Job.TxDetector.Core.Services;
 using Lykke.Job.TxDetector.Models;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.SwaggerGen.Annotations;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Lykke.Job.TxDetector.Controllers
 {
