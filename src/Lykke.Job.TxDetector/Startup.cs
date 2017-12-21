@@ -27,6 +27,7 @@ namespace Lykke.Job.TxDetector
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; set; }
         public IConfigurationRoot Configuration { get; }
+        public ILog Log { get; private set; }
 
         private TriggerHost _triggerHost;
         private Task _triggerHostTask;
@@ -43,90 +44,142 @@ namespace Lykke.Job.TxDetector
 
             Configuration = builder.Build();
             Environment = env;
-
-            Console.WriteLine($"ENV_INFO: {System.Environment.GetEnvironmentVariable("ENV_INFO")}");
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
-                .AddJsonOptions(options =>
+            try
+            {
+                services.AddMvc()
+                        .AddJsonOptions(options =>
+                        {
+                            options.SerializerSettings.ContractResolver =
+                                new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                        });
+
+                services.AddSwaggerGen(options =>
                 {
-                    options.SerializerSettings.ContractResolver =
-                        new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    options.DefaultLykkeConfiguration("v1", "TxDetector API");
                 });
 
-            services.AddSwaggerGen(options =>
-            {
-                options.DefaultLykkeConfiguration("v1", "TxDetector API");
-            });
+                var builder = new ContainerBuilder();
+                IReloadingManager<AppSettings> settingsManager = Environment.IsDevelopment()
+                    ? new LocalSettingsReloadingManager<AppSettings>("appsettings.json")
+                    : Configuration.LoadSettings<AppSettings>("SettingsUrl");
+                Log = CreateLogWithSlack(services, settingsManager);
 
-            var builder = new ContainerBuilder();
-            IReloadingManager<AppSettings> settingsManager = Environment.IsDevelopment()
-                ? new LocalSettingsReloadingManager<AppSettings>("appsettings.json")
-                : Configuration.LoadSettings<AppSettings>("SettingsUrl");
-            var log = CreateLogWithSlack(services, settingsManager);
+                builder.RegisterModule(new JobModule(settingsManager, Log));
 
-            builder.RegisterModule(new JobModule(settingsManager, log));
-
-            string bitCoinQueueConnectionString = settingsManager.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
-            if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString))
-            {
-                builder.AddTriggers();
-            }
-            else
-            {
-                builder.AddTriggers(pool =>
+                string bitCoinQueueConnectionString = settingsManager.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
+                if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString))
                 {
-                    pool.AddDefaultConnection(bitCoinQueueConnectionString);
-                });
+                    builder.AddTriggers();
+                }
+                else
+                {
+                    builder.AddTriggers(pool =>
+                    {
+                        pool.AddDefaultConnection(bitCoinQueueConnectionString);
+                    });
+                }
+
+                builder.Populate(services);
+
+                ApplicationContainer = builder.Build();
+
+                return new AutofacServiceProvider(ApplicationContainer);
             }
-
-            builder.Populate(services);
-
-            ApplicationContainer = builder.Build();
-
-            return new AutofacServiceProvider(ApplicationContainer);
+            catch (Exception ex)
+            {
+                Log?.WriteFatalErrorAsync(nameof(Startup), nameof(ConfigureServices), "", ex).Wait();
+                throw;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
         {
-            if (env.IsDevelopment())
+            try
             {
-                app.UseDeveloperExceptionPage();
+                if (env.IsDevelopment())
+                {
+                    app.UseDeveloperExceptionPage();
+                }
+
+                app.UseLykkeMiddleware("TxDetector", ex => new ErrorResponse { ErrorMessage = "Technical problem" });
+
+                app.UseMvc();
+                app.UseSwagger();
+                app.UseSwaggerUI(x =>
+                {
+                    x.RoutePrefix = "swagger/ui";
+                    x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                });
+                app.UseStaticFiles();
+
+                appLifetime.ApplicationStarted.Register(() => StartApplication().Wait());
+                appLifetime.ApplicationStopping.Register(() => StopApplication().Wait());
+                appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
             }
-
-            app.UseLykkeMiddleware("TxDetector", ex => new ErrorResponse { ErrorMessage = "Technical problem" });
-
-            app.UseMvc();
-            app.UseSwagger();
-            app.UseSwaggerUI(x =>
+            catch (Exception ex)
             {
-                x.RoutePrefix = "swagger/ui";
-                x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-            });
-            app.UseStaticFiles();
-
-            appLifetime.ApplicationStarted.Register(Start);
-            appLifetime.ApplicationStopping.Register(StopApplication);
-            appLifetime.ApplicationStopped.Register(CleanUp);
+                Log?.WriteFatalErrorAsync(nameof(Startup), nameof(ConfigureServices), "", ex).Wait();
+                throw;
+            }
         }
 
-        private void Start()
+        private async Task StartApplication()
         {
-            _triggerHost = new TriggerHost(new AutofacServiceProvider(ApplicationContainer));
-            _triggerHostTask = _triggerHost.Start();
+            try
+            {
+                _triggerHost = new TriggerHost(new AutofacServiceProvider(ApplicationContainer));
+                _triggerHostTask = _triggerHost.Start();
+
+                await Log.WriteMonitorAsync("", "", "Started");
+            }
+            catch (Exception ex)
+            {
+                await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StartApplication), "", ex);
+                throw;
+            }
         }
 
-        private void StopApplication()
+        private async Task StopApplication()
         {
-            _triggerHost?.Cancel();
-            _triggerHostTask?.Wait();
+            try
+            {
+                _triggerHost?.Cancel();
+                _triggerHostTask?.Wait();
+            }
+            catch (Exception ex)
+            {
+                if (Log != null)
+                {
+                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StopApplication), "", ex);
+                }
+                throw;
+            }
         }
 
-        private void CleanUp()
+        private async Task CleanUp()
         {
-            ApplicationContainer.Dispose();
+            try
+            {
+                if (Log != null)
+                {
+                    await Log.WriteMonitorAsync("", "", "Terminating");
+                }
+
+                ApplicationContainer.Dispose();
+            }
+            catch (Exception ex)
+            {
+                if (Log != null)
+                {
+                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);
+                    (Log as IDisposable)?.Dispose();
+                }
+                throw;
+            }
         }
 
         private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settingsManager)
