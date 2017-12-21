@@ -19,7 +19,6 @@ namespace Lykke.Job.TxDetector
 
             try
             {
-
                 var webHost = new WebHostBuilder()
                 .UseKestrel()
                 .UseUrls("http://*:5000")

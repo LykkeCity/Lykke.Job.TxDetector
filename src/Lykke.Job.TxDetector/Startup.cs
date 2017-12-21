@@ -43,8 +43,6 @@ namespace Lykke.Job.TxDetector
 
             Configuration = builder.Build();
             Environment = env;
-
-            Console.WriteLine($"ENV_INFO: {System.Environment.GetEnvironmentVariable("ENV_INFO")}");
         }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
@@ -69,7 +67,7 @@ namespace Lykke.Job.TxDetector
 
                 builder.RegisterModule(new JobModule(appSettings, Log));
 
-                string bitCoinQueueConnectionString = appSettings.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
+                var bitCoinQueueConnectionString = appSettings.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
                 if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString))
                 {
                     builder.AddTriggers();
