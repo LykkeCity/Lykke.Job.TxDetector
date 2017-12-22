@@ -17,7 +17,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                 var spentCoins = item.SpentCoins.GetColoredOnly(x => x.TransactionId == item.TransactionId);
 
                 //skip if received/spent coins has other tx id => it's just a related colored operation
-                if (!Enumerable.Any<BitCoinInOut>(receivedCoins) && !Enumerable.Any<BitCoinInOut>(spentCoins))
+                if (!receivedCoins.Any() && !spentCoins.Any())
                     return null;
 
                 var clrTrans = item.ReceivedCoins?.FirstOrDefault() ?? item.SpentCoins.FirstOrDefault();
@@ -27,7 +27,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                     AssetId = clrTrans?.AssetId,
                     DateTime = item.Block?.BlockTime ?? item.FirstSeen,
                     TxId = clrTrans?.TransactionId,
-                    Amount = Enumerable.Sum<BitCoinInOut>(receivedCoins, itm => itm.Quantity.Value) - Enumerable.Sum<BitCoinInOut>(spentCoins, itm => itm.Quantity.Value),
+                    Amount = receivedCoins.Sum(itm => itm.Quantity.Value) - spentCoins.Sum(itm => itm.Quantity.Value),
                     Confirmations = item.Block?.Confirmations ?? 0,
                     BlockId = item.Block?.BlockId,
                     Height = item.Block?.Height ?? 0
@@ -57,17 +57,17 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                 var spentCoins = item.SpentCoins.GetColoredOnly(x => x.TransactionId == item.TransactionId);
 
                 //skip if received/spent coins has other tx id => it's just a related colored operation
-                if (!Enumerable.Any<BitCoinInOut>(receivedCoins) && !Enumerable.Any<BitCoinInOut>(spentCoins))
+                if (!receivedCoins.Any() && !spentCoins.Any())
                     return null;
 
-                var clrTrans = Enumerable.FirstOrDefault<BitCoinInOut>(receivedCoins) ?? Enumerable.FirstOrDefault<BitCoinInOut>(spentCoins);
+                var clrTrans = receivedCoins.FirstOrDefault() ?? spentCoins.FirstOrDefault();
 
                 return new ObsoleteBlockchainTransaction
                 {
                     AssetId = clrTrans.AssetId,
                     DateTime = item.FirstSeen,
                     TxId = clrTrans.TransactionId,
-                    Amount = Enumerable.Sum<BitCoinInOut>(receivedCoins, itm => itm.Quantity.Value) - Enumerable.Sum<BitCoinInOut>(spentCoins, itm => itm.Quantity.Value),
+                    Amount = receivedCoins.Sum(itm => itm.Quantity.Value) - spentCoins.Sum(itm => itm.Quantity.Value),
                     Address = address,
                     Confirmations = item.Confirmations,
                     BlockId = item.BlockId,
@@ -120,7 +120,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
 
         private static bool IsColoredTransaction(BitCoinInOut[] receivedCoins, BitCoinInOut[] spentCoins)
         {
-            return Enumerable.Any<BitCoinInOut>(receivedCoins.GetColoredOnly()) || Enumerable.Any<BitCoinInOut>(spentCoins.GetColoredOnly());
+            return receivedCoins.GetColoredOnly().Any() || spentCoins.GetColoredOnly().Any();
         }
 
         private static BitCoinInOut[] GetColoredOnly(this BitCoinInOut[] coins,

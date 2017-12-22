@@ -24,7 +24,6 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly ILastProcessedBlockRepository _lastProcessedBlockRepository;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
         private readonly IConfirmPendingTxsQueue _confirmPendingTxsQueue;
-        private readonly IBlockchainTransactionsCache _blockchainTransactionsCache;
         private readonly AppSettings.TxDetectorSettings _txDetectorSettings;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
 
@@ -35,7 +34,6 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             ILog log, IInternalOperationsRepository internalOperationsRepository,
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             IConfirmPendingTxsQueue confirmPendingTxsQueue,
-            IBlockchainTransactionsCache blockchainTransactionsCache,
             AppSettings.TxDetectorSettings txDetectorSettings,
             IAppGlobalSettingsRepositry appGlobalSettingsRepositry)
         {
@@ -47,7 +45,6 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _lastProcessedBlockRepository = lastProcessedBlockRepository;
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
             _confirmPendingTxsQueue = confirmPendingTxsQueue;
-            _blockchainTransactionsCache = blockchainTransactionsCache;
             _txDetectorSettings = txDetectorSettings;
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
         }
@@ -83,7 +80,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             }
 
             await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
-                $"Scan finised. Scan duration: {DateTime.UtcNow - dtStart}");
+                $"Scan finished. Scan duration: {DateTime.UtcNow - dtStart}");
         }
 
         private async Task HandleWallets(IEnumerable<IWalletCredentials> walletCredentials)
@@ -123,7 +120,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                 var balanceChangeTx = BalanceChangeTransaction.Create(tx,
                     walletCredentials.ClientId, walletCredentials.MultiSig);
 
-                //check if transaction was already proccessed (ninja issue https://github.com/MetacoSA/QBitNinja/issues/24 or some fail during processing occured)
+                //check if transaction was already processed (ninja issue https://github.com/MetacoSA/QBitNinja/issues/24 or some fail during processing occurred)
                 var shouldBeProcessed = await _balanceChangeTransactionsRepository.InsertIfNotExistsAsync(balanceChangeTx);
 
                 if (shouldBeProcessed)

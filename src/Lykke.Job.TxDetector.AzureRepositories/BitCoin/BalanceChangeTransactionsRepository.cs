@@ -67,9 +67,9 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
     {
         private readonly INoSQLTableStorage<BalanceChangeTransactionEntity> _tableStorage;
 
-        public BalanceChangeTransactionsRepository(INoSQLTableStorage<BalanceChangeTransactionEntity> _tableStorage)
+        public BalanceChangeTransactionsRepository(INoSQLTableStorage<BalanceChangeTransactionEntity> tableStorage)
         {
-            this._tableStorage = _tableStorage;
+            _tableStorage = tableStorage;
         }
 
         public async Task<bool> InsertIfNotExistsAsync(IBalanceChangeTransaction balanceChangeTransaction)

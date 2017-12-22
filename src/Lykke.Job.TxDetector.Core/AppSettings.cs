@@ -54,8 +54,7 @@ namespace Lykke.Job.TxDetector.Core
 
             public IPEndPoint GetClientIpEndPoint(bool useInternal = false)
             {
-                IPAddress address;
-                if (!IPAddress.TryParse(Host, out address))
+                if (!IPAddress.TryParse(Host, out var address))
                     address = Dns.GetHostAddressesAsync(Host).Result[0];
 
                 return new IPEndPoint(address, Port);
