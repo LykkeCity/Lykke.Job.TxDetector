@@ -16,7 +16,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
     public class CashInHandler
     {
         private readonly IAppNotifications _appNotifications;
-        private readonly IMatchingEngineConnector _matchingEngineConnector;
+        private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
         private readonly IClientAccountsRepository _clientAccountsRepository;
         private readonly ISrvEmailsFacade _srvEmailsFacade;
@@ -24,14 +24,14 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
 
         public CashInHandler(
             IAppNotifications appNotifications,
-            IMatchingEngineConnector matchingEngineConnector,
+            IMatchingEngineClient matchingEngineClient,
             ICashOperationsRepositoryClient cashOperationsRepositoryClient,
             IClientAccountsRepository clientAccountsRepository,
             ISrvEmailsFacade srvEmailsFacade,
             IClientSettingsRepository clientSettingsRepository)
         {
             _appNotifications = appNotifications;
-            _matchingEngineConnector = matchingEngineConnector;
+            _matchingEngineClient = matchingEngineClient;
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient;
             _clientAccountsRepository = clientAccountsRepository;
             _srvEmailsFacade = srvEmailsFacade;
@@ -42,7 +42,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
         {
             var id = Guid.NewGuid().ToString("N");
 
-            await _matchingEngineConnector.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
+            await _matchingEngineClient.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
 
             await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
             {
