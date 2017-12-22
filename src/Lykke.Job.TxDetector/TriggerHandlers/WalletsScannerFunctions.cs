@@ -130,8 +130,16 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                     await HandleDetectedTransaction(walletCredentials, tx, balanceChangeTx);
             }
 
-            await _lastProcessedBlockRepository.InsertOrUpdateForClientAsync(walletCredentials.ClientId,
-                _currentBlockHeight);
+            try
+            {
+                await _lastProcessedBlockRepository.InsertOrUpdateForClientAsync(walletCredentials.ClientId,
+                    _currentBlockHeight);
+            }
+            catch (TaskCanceledException ex)
+            {
+                await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(HandleWallet), "",
+                    $"Timeout while updating last block for {walletCredentials.ClientId}");
+            }
         }
 
         private async Task HandleDetectedTransaction(IWalletCredentials walletCredentials, IBlockchainTransaction tx, IBalanceChangeTransaction balanceChangeTx)
