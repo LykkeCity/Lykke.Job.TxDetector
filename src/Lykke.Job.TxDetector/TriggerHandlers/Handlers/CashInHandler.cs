@@ -42,8 +42,6 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
         {
             var id = Guid.NewGuid().ToString("N");
 
-            await _matchingEngineConnector.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
-
             await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
             {
                 Id = id,
@@ -56,6 +54,8 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
                 AddressTo = balanceChangeTx.Multisig,
                 State = TransactionStates.SettledOnchain
             });
+
+            await _matchingEngineConnector.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
 
             var clientAcc = await _clientAccountsRepository.GetByIdAsync(balanceChangeTx.ClientId);
             await _srvEmailsFacade.SendNoRefundDepositDoneMail(clientAcc.Email, amount, asset.Id);
