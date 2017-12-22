@@ -16,7 +16,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
     public class CashInHandler
     {
         private readonly IAppNotifications _appNotifications;
-        private readonly IMatchingEngineConnector _matchingEngineConnector;
+        private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
         private readonly IClientAccountsRepository _clientAccountsRepository;
         private readonly ISrvEmailsFacade _srvEmailsFacade;
@@ -24,14 +24,14 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
 
         public CashInHandler(
             IAppNotifications appNotifications,
-            IMatchingEngineConnector matchingEngineConnector,
+            IMatchingEngineClient matchingEngineClient,
             ICashOperationsRepositoryClient cashOperationsRepositoryClient,
             IClientAccountsRepository clientAccountsRepository,
             ISrvEmailsFacade srvEmailsFacade,
             IClientSettingsRepository clientSettingsRepository)
         {
             _appNotifications = appNotifications;
-            _matchingEngineConnector = matchingEngineConnector;
+            _matchingEngineClient = matchingEngineClient;
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient;
             _clientAccountsRepository = clientAccountsRepository;
             _srvEmailsFacade = srvEmailsFacade;
@@ -41,7 +41,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
         public async Task<double> HandleCashInOperation(IBalanceChangeTransaction balanceChangeTx, IAsset asset, double amount)
         {
             var id = Guid.NewGuid().ToString("N");
-
+            
             await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
             {
                 Id = id,
@@ -55,7 +55,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers.Handlers
                 State = TransactionStates.SettledOnchain
             });
 
-            await _matchingEngineConnector.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
+            await _matchingEngineClient.CashInOutAsync(id, balanceChangeTx.ClientId, asset.Id, amount);
 
             var clientAcc = await _clientAccountsRepository.GetByIdAsync(balanceChangeTx.ClientId);
             await _srvEmailsFacade.SendNoRefundDepositDoneMail(clientAcc.Email, amount, asset.Id);
