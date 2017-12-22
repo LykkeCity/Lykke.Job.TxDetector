@@ -68,8 +68,8 @@ namespace Lykke.Job.TxDetector
 
                 builder.RegisterModule(new JobModule(appSettings, Log));
 
-                var bitCoinQueueConnectionString = appSettings.CurrentValue.TxDetectorJob.Db.BitCoinQueueConnectionString;
-                if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString))
+                var bitCoinQueueConnectionString = appSettings.ConnectionString(x => x.TxDetectorJob.Db.BitCoinQueueConnectionString);
+                if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString.CurrentValue))
                 {
                     builder.AddTriggers();
                 }
