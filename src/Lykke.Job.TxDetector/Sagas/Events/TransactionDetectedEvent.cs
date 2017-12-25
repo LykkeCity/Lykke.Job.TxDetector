@@ -3,10 +3,9 @@
 namespace Lykke.Job.TxDetector.Sagas.Events
 {
     [ProtoContract]
-    public class TransactionCreatedEvent
-    {        
+    public class TransactionDetectedEvent
+    {
         [ProtoMember(1)]
-
-        public string OrderId { get; set; }
+        public string TransactionHash { get; set; }
     }
 }

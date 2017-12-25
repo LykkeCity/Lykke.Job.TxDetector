@@ -5,10 +5,13 @@ using System.Net;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
+using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
+using Lykke.Job.TxDetector.Sagas.Events;
 using Lykke.JobTriggers.Triggers.Attributes;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 
@@ -23,9 +26,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly IInternalOperationsRepository _internalOperationsRepository;
         private readonly ILastProcessedBlockRepository _lastProcessedBlockRepository;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
-        private readonly IConfirmPendingTxsQueue _confirmPendingTxsQueue;
         private readonly AppSettings.TxDetectorSettings _txDetectorSettings;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
+        private readonly IEventPublisher _eventPublisher;
 
         private int _currentBlockHeight;
 
@@ -33,9 +36,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             ISrvBlockchainReader srvBlockchainReader, ITradeOperationsRepositoryClient clientTradesRepositoryClient,
             ILog log, IInternalOperationsRepository internalOperationsRepository,
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
-            IConfirmPendingTxsQueue confirmPendingTxsQueue,
             AppSettings.TxDetectorSettings txDetectorSettings,
-            IAppGlobalSettingsRepositry appGlobalSettingsRepositry)
+            IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
+            [NotNull] IEventPublisher eventPublisher)
         {
             _walletCredentialsRepository = walletCredentialsRepository;
             _srvBlockchainReader = srvBlockchainReader;
@@ -44,9 +47,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _internalOperationsRepository = internalOperationsRepository;
             _lastProcessedBlockRepository = lastProcessedBlockRepository;
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
-            _confirmPendingTxsQueue = confirmPendingTxsQueue;
             _txDetectorSettings = txDetectorSettings;
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
+            _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
         }
 
         [TimerTrigger("00:02:00")]
@@ -87,15 +90,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         {
             foreach (var chunk in walletCredentials.ToChunks(_txDetectorSettings.ProcessInParallelCount))
             {
-                var tasks = new List<Task>();
-                foreach (var item in chunk)
-                {
-                    tasks.Add(HandleWallet(item));
-                }
-
                 try
                 {
-                    await Task.WhenAll(tasks);
+                    await Task.WhenAll(chunk.Select(HandleWallet));
                 }
                 catch (Exception ex)
                 {
@@ -147,7 +144,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             {
                 foreach (var id in internalOperation.OperationIds)
                 {
-                    await  _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
+                    await _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
                             walletCredentials.ClientId, id, DateTime.UtcNow,
                             tx.Confirmations);
                 }
@@ -156,7 +153,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                      || IsExternalCashIn(walletCredentials, tx, internalOperation)
                      || IsOtherClientsCashOut(walletCredentials, tx, internalOperation))
             {
-                await _confirmPendingTxsQueue.PutAsync(new PendingTxMsg { Hash = balanceChangeTx.Hash });
+                _eventPublisher.PublishEvent(new TransactionDetectedEvent { TransactionHash = balanceChangeTx.Hash });
             }
         }
 

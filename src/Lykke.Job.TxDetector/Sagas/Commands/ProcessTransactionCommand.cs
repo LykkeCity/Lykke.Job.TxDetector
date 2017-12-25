@@ -3,9 +3,9 @@
 namespace Lykke.Job.TxDetector.Sagas.Commands
 {
     [ProtoContract]
-    public class CreateTransactionCommand
+    public class ProcessTransactionCommand
     {
         [ProtoMember(1)]
-        public string OrderId { get; set; }
+        public string TransactionHash { get; set; }
     }
 }

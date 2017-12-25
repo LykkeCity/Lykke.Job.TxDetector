@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
@@ -6,6 +7,10 @@ using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
+using Inceptum.Cqrs.Configuration;
+using Inceptum.Messaging;
+using Inceptum.Messaging.RabbitMq;
+using Lykke.Cqrs;
 using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
 using Lykke.Job.TxDetector.AzureRepositories.Clients;
@@ -21,16 +26,18 @@ using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
-using Lykke.Job.TxDetector.Core.Services.Messages;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
+using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Sagas.Commands;
+using Lykke.Job.TxDetector.Sagas.Events;
+using Lykke.Job.TxDetector.Sagas.Handlers;
 using Lykke.Job.TxDetector.Services;
 using Lykke.Job.TxDetector.Services.BitCoin;
-using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
-using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
 using Lykke.MatchingEngine.Connector.Services;
+using Lykke.Messaging;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,6 +93,7 @@ namespace Lykke.Job.TxDetector.Modules
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
             BindServices(builder);
+            BindSaga(builder);
 
             builder.Populate(_services);
         }
@@ -93,16 +101,10 @@ namespace Lykke.Job.TxDetector.Modules
         private void BindServices(ContainerBuilder builder)
         {
             builder.RegisterType<SrvNinjaBlockChainReader>().As<ISrvBlockchainReader>().SingleInstance();
-
-            builder.RegisterType<SrvEmailsFacade>().As<ISrvEmailsFacade>().SingleInstance();
-
+            
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
-
-            builder.RegisterType<TransferHandler>().SingleInstance();
-
-            builder.RegisterType<CashInHandler>().SingleInstance();
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -126,12 +128,7 @@ namespace Lykke.Job.TxDetector.Modules
                 new BlockchainTransactionsCache(
                     AzureTableStorage<ObsoleteBlockchainTransactionsCacheItem>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "Transactions", _log)));
-
-            builder.RegisterInstance<IConfirmPendingTxsQueue>(
-                new ConfirmPendingTxsQueue(
-                    AzureQueueExt.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "txs-confirm-pending")));
-
+            
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
                         AzureTableStorage<LastProcessedBlockEntity>.Create(
@@ -175,7 +172,7 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterInstance<IPaymentTransactionsRepository>(
                 new PaymentTransactionsRepository(
                     AzureTableStorage<PaymentTransactionEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log), 
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log),
                     AzureTableStorage<AzureMultiIndex>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log)));
         }
@@ -186,6 +183,87 @@ namespace Lykke.Job.TxDetector.Modules
                 str => Console.WriteLine(DateTime.UtcNow.ToIsoDateTime() + ": " + str));
 
             container.BindMeClient(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
+        }
+
+        private void BindSaga(ContainerBuilder container)
+        {
+            var rabbitConnectionString = string.Empty;
+            var messagingEngine = new MessagingEngine(null,
+                new TransportResolver(new Dictionary<string, TransportInfo>
+                {
+                    {"rmq", new TransportInfo(rabbitConnectionString, string.Empty, string.Empty, "None", "RabbitMq")}
+                }),
+                new RabbitMqTransportFactory());
+
+
+            container.RegisterType<ConfirmationsSaga>();
+
+            container.Register(ctx => new CqrsEngine(
+                null,
+                ctx.Resolve<IDependencyResolver>(),
+                messagingEngine,
+                new DefaultEndpointProvider(),
+                true,
+                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("rmq", "protobuf", environment: "dev")),
+
+                Register.BoundedContext("confirmations")
+                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                    .ListeningCommands(typeof(ProcessTransactionCommand))
+                        .On("confirmations-commands")
+                    .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
+                        .With("confirmations-events")
+                    .WithCommandsHandler<ConfirmationsHandler>(),
+
+                Register.BoundedContext("transfer")
+                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                    .ListeningCommands(typeof(HandleTransferCommand))
+                        .On("transfer-commands")
+                    .WithCommandsHandler<TransferHandler>(),
+
+                Register.BoundedContext("cachein")
+                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                    .ListeningCommands(typeof(ProcessCashInCommand))
+                        .On("cachein-commands")
+                    .PublishingEvents(typeof(TransactionConfirmedEvent))
+                        .With("cachein-events")
+                    .WithCommandsHandler<CashInHandler>(),
+
+                Register.BoundedContext("notifications")
+                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                    .ListeningCommands(typeof(SendNotificationCommand))
+                        .On("notifications-commands")
+                    .WithCommandsHandler<NotificationsHandler>(),
+
+                Register.BoundedContext("email")
+                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                    .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
+                        .On("email-commands")
+                    .WithCommandsHandler<EmailHandler>(),
+                
+                Register.Saga<ConfirmationsSaga>("confirmations-saga")
+                    .ListeningEvents(typeof(TransactionDetectedEvent))
+                        .From("azaza").On("azaza-events")
+                    .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
+                        .From("confirmations").On("confirmations-events")
+                    .ListeningEvents(typeof(TransactionConfirmedEvent))
+                        .From("cachein").On("cachein-events")
+                    .PublishingCommands(typeof(HandleTransferCommand))
+                        .To("transfer").With("transfer-commands")
+                    .PublishingCommands(typeof(ProcessCashInCommand))
+                        .To("cachein").With("cachein-commands")
+                    .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
+                        .To("transfer").With("transfer-commands")
+                    .PublishingCommands(typeof(SendNotificationCommand))
+                        .To("transfer").With("transfer-commands"),
+                
+                Register.DefaultRouting
+                    .PublishingCommands(typeof(ProcessTransactionCommand))
+                        .To("confirmations").With("confirmations-commands")
+                    .PublishingCommands(typeof(HandleTransferCommand))
+                        .To("transfer").With("transfer-commands")
+                    .PublishingCommands(typeof(ProcessCashInCommand))
+                        .To("cachein").With("cachein-commands")))
+            .As<ICqrsEngine>().SingleInstance();
         }
     }
 }
