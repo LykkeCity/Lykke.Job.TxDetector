@@ -1,5 +1,4 @@
-﻿using Lykke.Job.TxDetector.Core.Domain.BitCoin;
-using Lykke.Service.Assets.Client.Custom;
+﻿using Lykke.Job.TxDetector.Sagas.Models;
 using ProtoBuf;
 
 namespace Lykke.Job.TxDetector.Sagas.Commands
@@ -8,9 +7,9 @@ namespace Lykke.Job.TxDetector.Sagas.Commands
     public class ProcessCashInCommand
     {
         [ProtoMember(1)]
-        public IBalanceChangeTransaction Transaction { get; set; }
+        public Transaction Transaction { get; set; }
         [ProtoMember(2)]
-        public IAsset Asset { get; set; }
+        public Asset Asset { get; set; }
         [ProtoMember(3)]
         public double Amount { get; set; }
     }

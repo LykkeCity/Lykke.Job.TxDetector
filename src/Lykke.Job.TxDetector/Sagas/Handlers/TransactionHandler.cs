@@ -11,6 +11,7 @@ using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Sagas.Commands;
 using Lykke.Job.TxDetector.Sagas.Events;
+using Lykke.Job.TxDetector.Sagas.Models;
 using Lykke.Service.Assets.Client.Custom;
 
 namespace Lykke.Job.TxDetector.Sagas.Handlers
@@ -107,7 +108,12 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
 
                             var sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
 
-                            eventPublisher.PublishEvent(new CashInOperationCreatedEvent { Transaction = tx, Asset = asset, Amount = sum });
+                            eventPublisher.PublishEvent(new CashInOperationCreatedEvent
+                            {
+                                Transaction = new Transaction { Hash = tx.Hash, ClientId = tx.ClientId, Multisig = tx.Multisig },
+                                Asset = new Asset { Id = asset.Id, Accuracy = asset.Accuracy },
+                                Amount = sum
+                            });
                         }
                     }
                 }
