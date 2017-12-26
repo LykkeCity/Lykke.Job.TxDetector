@@ -10,6 +10,7 @@ namespace Lykke.Job.TxDetector.Core
         public SlackNotificationsSettings SlackNotifications { get; set; }
         public AssetsSettings Assets { get; set; }
         public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
+        public RabbitMqSettings RabbitMq { get; set; }
 
         public class TxDetectorSettings
         {
@@ -83,5 +84,14 @@ namespace Lykke.Job.TxDetector.Core
         }
     }
 
+    public class RabbitMqSettings
+    {
+        public string ConnectionString { get; set; }
 
+        public string ExternalHost { get; set; }
+
+        public int Port { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
 }

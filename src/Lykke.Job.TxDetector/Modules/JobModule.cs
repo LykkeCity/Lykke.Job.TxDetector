@@ -101,7 +101,7 @@ namespace Lykke.Job.TxDetector.Modules
         private void BindServices(ContainerBuilder builder)
         {
             builder.RegisterType<SrvNinjaBlockChainReader>().As<ISrvBlockchainReader>().SingleInstance();
-            
+
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
@@ -123,7 +123,7 @@ namespace Lykke.Job.TxDetector.Modules
                 new BalanceChangeTransactionsRepository(
                     AzureTableStorage<BalanceChangeTransactionEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "BalanceChangeTransactions", _log)));
-            
+
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
                         AzureTableStorage<LastProcessedBlockEntity>.Create(
@@ -182,24 +182,30 @@ namespace Lykke.Job.TxDetector.Modules
 
         private void BindSaga(ContainerBuilder container)
         {
-            var rabbitConnectionString = string.Empty;
-            var messagingEngine = new MessagingEngine(null,
+            container.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
+
+            var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
                 {
-                    {"rmq", new TransportInfo(rabbitConnectionString, string.Empty, string.Empty, "None", "RabbitMq")}
+                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
                 }),
                 new RabbitMqTransportFactory());
 
-
             container.RegisterType<ConfirmationsSaga>();
 
+            container.RegisterType<TransactionHandler>();
+            container.RegisterType<TransferHandler>();
+            container.RegisterType<CashInHandler>();
+            container.RegisterType<NotificationsHandler>();
+            container.RegisterType<EmailHandler>();
+
             container.Register(ctx => new CqrsEngine(
-                null,
+                _log,
                 ctx.Resolve<IDependencyResolver>(),
                 messagingEngine,
                 new DefaultEndpointProvider(),
                 true,
-                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("rmq", "protobuf", environment: "dev")),
+                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: "dev-tx-handler")),
 
                 Register.BoundedContext("transactions")
                     .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(3).TotalMilliseconds)
@@ -234,7 +240,7 @@ namespace Lykke.Job.TxDetector.Modules
                     .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
                         .On("email-commands")
                     .WithCommandsHandler<EmailHandler>(),
-                
+
                 Register.Saga<ConfirmationsSaga>("transactions-saga")
                     .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
                         .From("transactions").On("transactions-events")
@@ -248,7 +254,7 @@ namespace Lykke.Job.TxDetector.Modules
                         .To("transfer").With("transfer-commands")
                     .PublishingCommands(typeof(SendNotificationCommand))
                         .To("email").With("email-commands"),
-                
+
                 Register.DefaultRouting
                     .PublishingCommands(typeof(ProcessTransactionCommand))
                         .To("transactions").With("transactions-commands")
