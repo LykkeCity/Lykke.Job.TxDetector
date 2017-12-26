@@ -66,6 +66,8 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                 //context.SetCountQueueBasedDelay(500, 100);
             }
 
+            ChaosKitty.Meow();
+
             var hash = command.TransactionHash;
 
             var balanceChangeTransaction = await _balanceChangeTransactionsRepository.GetAsync(hash);
@@ -77,6 +79,8 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                 var alreadyProcessed = !await _confirmedTransactionsRepository.SaveConfirmedIfNotExist(hash, tx.ClientId);
                 if (alreadyProcessed)
                     continue;
+
+                ChaosKitty.Meow();
 
                 if (operation != null && operation.CommandType == BitCoinCommands.Transfer)
                 {

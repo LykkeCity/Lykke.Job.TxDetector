@@ -32,10 +32,12 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
         public async Task Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
         {
             await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
-            var id = Guid.NewGuid().ToString("N");
+            var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
             var transaction = command.Transaction;
+
+            ChaosKitty.Meow();
 
             await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
             {
@@ -50,11 +52,15 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                 State = TransactionStates.SettledOnchain
             });
 
+            ChaosKitty.Meow();
+
             var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
             if(responseModel.Status != MeStatusCodes.Ok)
             {
                 // todo: handle ME error
             }
+
+            ChaosKitty.Meow();
 
             eventPublisher.PublishEvent(new TransactionProcessedEvent { ClientId = command.Transaction.ClientId, Asset = command.Asset, Amount = command.Amount });
         }

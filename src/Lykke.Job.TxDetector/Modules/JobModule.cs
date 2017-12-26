@@ -251,9 +251,9 @@ namespace Lykke.Job.TxDetector.Modules
                     .PublishingCommands(typeof(ProcessCashInCommand))
                         .To("cachein").With("cachein-commands")
                     .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .To("transfer").With("transfer-commands")
+                        .To("email").With("email-commands")
                     .PublishingCommands(typeof(SendNotificationCommand))
-                        .To("email").With("email-commands"),
+                        .To("notifications").With("notifications-commands"),
 
                 Register.DefaultRouting
                     .PublishingCommands(typeof(ProcessTransactionCommand))
@@ -261,7 +261,11 @@ namespace Lykke.Job.TxDetector.Modules
                     .PublishingCommands(typeof(HandleTransferCommand))
                         .To("transfer").With("transfer-commands")
                     .PublishingCommands(typeof(ProcessCashInCommand))
-                        .To("cachein").With("cachein-commands")))
+                        .To("cachein").With("cachein-commands")
+                    .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
+                        .To("email").With("email-commands")
+                    .PublishingCommands(typeof(SendNotificationCommand))
+                        .To("notifications").With("notifications-commands")))
             .As<ICqrsEngine>().SingleInstance();
         }
     }

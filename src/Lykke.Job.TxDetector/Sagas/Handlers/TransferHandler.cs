@@ -28,11 +28,15 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
         {
             await _log.WriteInfoAsync(nameof(TransferHandler), nameof(HandleTransferCommand), command.ToJson(), "");
 
+            ChaosKitty.Meow();
+
             //not need for offchain
             //await _transferEventsRepository.SetIsSettledIfExistsAsync(clientId, transferId, false);
 
             if (await _paymentTransactionsRepository.SetStatus(command.TransferId, PaymentStatus.NotifyProcessed) != null)
             {
+                ChaosKitty.Meow();
+
                 await _paymentTransactionEventsLog.WriteAsync(PaymentTransactionLogEvent.Create(
                     command.TransferId, 
                     "",

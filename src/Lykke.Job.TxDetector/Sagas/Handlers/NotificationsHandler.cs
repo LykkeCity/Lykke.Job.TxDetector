@@ -23,6 +23,8 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
         {
             await _log.WriteInfoAsync(nameof(NotificationsHandler), nameof(SendNotificationCommand), command.ToJson(), "");
 
+            ChaosKitty.Meow();
+
             await _appNotifications.SendTextNotificationAsync(new [] {command.NotificationId}, command.Type, command.Message);
         }
     }

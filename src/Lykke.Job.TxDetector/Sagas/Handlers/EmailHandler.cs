@@ -24,6 +24,8 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
         {
             await _log.WriteInfoAsync(nameof(NotificationsHandler), nameof(SendNoRefundDepositDoneMailCommand), command.ToJson(), "");
 
+            ChaosKitty.Meow();
+
             var content = new NoRefundDepositDoneData
             {
                 Amount = command.Amount,

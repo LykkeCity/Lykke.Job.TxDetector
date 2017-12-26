@@ -157,7 +157,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                     TransactionHash = balanceChangeTx.Hash
                 };
 
-                _cqrsEngine.SendCommand(createTradeCommand, "confirmations", "confirmations");
+                _cqrsEngine.SendCommand(createTradeCommand, "transactions", "transactions");
             }
         }
 

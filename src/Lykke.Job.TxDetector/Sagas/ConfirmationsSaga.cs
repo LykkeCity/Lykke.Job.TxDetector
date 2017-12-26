@@ -32,11 +32,14 @@ namespace Lykke.Job.TxDetector.Sagas
         {
             await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOperationCreatedEvent), evt.ToJson());
 
+            ChaosKitty.Meow();
+
             var cmd = new ProcessCashInCommand
             {
                 Transaction = evt.Transaction,
                 Asset = evt.Asset,
-                Amount = evt.Amount
+                Amount = evt.Amount,
+                CommandId = Guid.NewGuid().ToString("N")
             };
 
             sender.SendCommand(cmd, "cachein");
@@ -45,6 +48,8 @@ namespace Lykke.Job.TxDetector.Sagas
         private async Task Handle(TransferOperationCreatedEvent evt, ICommandSender sender)
         {
             await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransferOperationCreatedEvent), evt.ToJson());
+
+            ChaosKitty.Meow();
 
             var cmd = new HandleTransferCommand
             {
@@ -58,26 +63,30 @@ namespace Lykke.Job.TxDetector.Sagas
         {
             await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransactionProcessedEvent), evt.ToJson());
 
+            ChaosKitty.Meow();
+
             var clientAcc = await _clientAccountsRepository.GetByIdAsync(evt.ClientId);
 
-            var cmd = new SendNoRefundDepositDoneMailCommand
+            var sendEmailCommand = new SendNoRefundDepositDoneMailCommand
             {
                 Email = clientAcc.Email,
                 Amount = evt.Amount,
                 AssetId = evt.Asset.Id
             };
-            sender.SendCommand(cmd, "email");
+            sender.SendCommand(sendEmailCommand, "email");
+
+            ChaosKitty.Meow();
 
             var pushSettings = await _clientSettingsRepository.GetSettings<PushNotificationsSettings>(evt.ClientId);
             if (pushSettings.Enabled)
             {
-                var cmd2 = new SendNotificationCommand
+                var sendNotificationCommand = new SendNotificationCommand
                 {
                     NotificationId = clientAcc.NotificationsId,
                     Type = NotificationType.TransactionConfirmed,
                     Message = string.Format(TextResources.CashInSuccessText, evt.Amount.GetFixedAsString(evt.Asset.Accuracy), evt.Asset.Id)
                 };
-                sender.SendCommand(cmd2, "notifications");
+                sender.SendCommand(sendNotificationCommand, "notifications");
             }
         }
     }
