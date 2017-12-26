@@ -15,8 +15,10 @@ using Lykke.Service.Assets.Client.Custom;
 
 namespace Lykke.Job.TxDetector.Sagas.Handlers
 {
-    public class ConfirmationsHandler
+    public class TransactionHandler
     {
+        private readonly AppSettings.TxDetectorSettings _settings;
+        private readonly ISrvBlockchainReader _srvBlockchainReader;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
         private readonly IInternalOperationsRepository _internalOperationsRepository;
         private readonly ICachedAssetsService _assetsService;
@@ -26,14 +28,16 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
 
         private readonly ILog _log;
 
-        public ConfirmationsHandler(
+        public TransactionHandler(
             IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             IInternalOperationsRepository internalOperationsRepository,
             ICachedAssetsService assetsService,
             IConfirmedTransactionsRepository confirmedTransactionsRepository,
             IPostponedCashInRepository postponedCashInRepository,
             IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
-            ILog log)
+            ILog log,
+            AppSettings.TxDetectorSettings settings,
+            ISrvBlockchainReader srvBlockchainReader)
         {
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
             _internalOperationsRepository = internalOperationsRepository;
@@ -42,11 +46,25 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
             _postponedCashInRepository = postponedCashInRepository;
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
             _log = log;
+            _settings = settings;
+            _srvBlockchainReader = srvBlockchainReader;
         }
 
+        // entry point
         public async Task Handle(ProcessTransactionCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsHandler), nameof(ProcessTransactionCommand), command.ToJson());
+            await _log.WriteInfoAsync(nameof(TransactionHandler), nameof(ProcessTransactionCommand), command.ToJson(), "");
+
+            var confirmations = await _srvBlockchainReader.GetConfirmationsCount(command.TransactionHash);
+            var isConfirmed = confirmations >= _settings.TxDetectorConfirmationsLimit;
+            if (!isConfirmed)
+            {
+                throw new Exception();
+                //put back if not confirmed yet
+                //context.MoveMessageToEnd(message);
+                //context.SetCountQueueBasedDelay(500, 100);
+            }
+
             var hash = command.TransactionHash;
 
             var balanceChangeTransaction = await _balanceChangeTransactionsRepository.GetAsync(hash);
@@ -56,7 +74,6 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
             foreach (var tx in balanceChangeTransaction)
             {
                 var alreadyProcessed = !await _confirmedTransactionsRepository.SaveConfirmedIfNotExist(hash, tx.ClientId);
-
                 if (alreadyProcessed)
                     continue;
 
@@ -67,7 +84,7 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                         if (string.IsNullOrWhiteSpace(id))
                             continue;
 
-                        eventPublisher.PublishEvent(new TransferOperationCreatedEvent { TransferId = id, ClientId = tx.ClientId });
+                        eventPublisher.PublishEvent(new TransferOperationCreatedEvent { TransferId = id });
                     }
                 }
                 else
@@ -76,18 +93,19 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                     {
                         var cashIns = tx.GetOperationSummary(tx.Multisig);
 
+                        var skipBtc = (await _appGlobalSettingsRepositry.GetAsync()).BtcOperationsDisabled;
+
                         foreach (var cashIn in cashIns)
                         {
                             var asset = await GetAssetByBcnIdAsync(cashIn.Key);
 
-                            var skipBtc = (await _appGlobalSettingsRepositry.GetAsync()).BtcOperationsDisabled;
                             if (asset.Id == LykkeConstants.BitcoinAssetId && skipBtc)
                             {
                                 await _postponedCashInRepository.SaveAsync(tx.Hash);
                                 continue;
                             }
 
-                            double sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
+                            var sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
 
                             eventPublisher.PublishEvent(new CashInOperationCreatedEvent { Transaction = tx, Asset = asset, Amount = sum });
                         }

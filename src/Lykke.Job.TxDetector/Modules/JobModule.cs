@@ -206,13 +206,13 @@ namespace Lykke.Job.TxDetector.Modules
                 true,
                 Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("rmq", "protobuf", environment: "dev")),
 
-                Register.BoundedContext("confirmations")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                Register.BoundedContext("transactions")
+                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(3).TotalMilliseconds)
                     .ListeningCommands(typeof(ProcessTransactionCommand))
-                        .On("confirmations-commands")
+                        .On("transactions-commands")
                     .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
-                        .With("confirmations-events")
-                    .WithCommandsHandler<ConfirmationsHandler>(),
+                        .With("transactions-events")
+                    .WithCommandsHandler<TransactionHandler>(),
 
                 Register.BoundedContext("transfer")
                     .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
@@ -224,7 +224,7 @@ namespace Lykke.Job.TxDetector.Modules
                     .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
                     .ListeningCommands(typeof(ProcessCashInCommand))
                         .On("cachein-commands")
-                    .PublishingEvents(typeof(TransactionConfirmedEvent))
+                    .PublishingEvents(typeof(TransactionProcessedEvent))
                         .With("cachein-events")
                     .WithCommandsHandler<CashInHandler>(),
 
@@ -235,17 +235,15 @@ namespace Lykke.Job.TxDetector.Modules
                     .WithCommandsHandler<NotificationsHandler>(),
 
                 Register.BoundedContext("email")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
+                    .FailedCommandRetryDelay((long)TimeSpan.FromMinutes(1).TotalMilliseconds)
                     .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
                         .On("email-commands")
                     .WithCommandsHandler<EmailHandler>(),
                 
-                Register.Saga<ConfirmationsSaga>("confirmations-saga")
-                    .ListeningEvents(typeof(TransactionDetectedEvent))
-                        .From("azaza").On("azaza-events")
+                Register.Saga<ConfirmationsSaga>("transactions-saga")
                     .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
-                        .From("confirmations").On("confirmations-events")
-                    .ListeningEvents(typeof(TransactionConfirmedEvent))
+                        .From("transactions").On("transactions-events")
+                    .ListeningEvents(typeof(TransactionProcessedEvent))
                         .From("cachein").On("cachein-events")
                     .PublishingCommands(typeof(HandleTransferCommand))
                         .To("transfer").With("transfer-commands")
@@ -254,11 +252,11 @@ namespace Lykke.Job.TxDetector.Modules
                     .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
                         .To("transfer").With("transfer-commands")
                     .PublishingCommands(typeof(SendNotificationCommand))
-                        .To("transfer").With("transfer-commands"),
+                        .To("email").With("email-commands"),
                 
                 Register.DefaultRouting
                     .PublishingCommands(typeof(ProcessTransactionCommand))
-                        .To("confirmations").With("confirmations-commands")
+                        .To("transactions").With("transactions-commands")
                     .PublishingCommands(typeof(HandleTransferCommand))
                         .To("transfer").With("transfer-commands")
                     .PublishingCommands(typeof(ProcessCashInCommand))

@@ -1,14 +1,13 @@
-﻿using Lykke.Job.TxDetector.Core.Domain.BitCoin;
-using Lykke.Service.Assets.Client.Custom;
+﻿using Lykke.Service.Assets.Client.Custom;
 using ProtoBuf;
 
 namespace Lykke.Job.TxDetector.Sagas.Events
 {
     [ProtoContract]
-    public class TransactionConfirmedEvent
+    public class TransactionProcessedEvent
     {
         [ProtoMember(1)]
-        public IBalanceChangeTransaction Transaction { get; set; }
+        public string ClientId { get; set; }
         [ProtoMember(2)]
         public IAsset Asset { get; set; }
         [ProtoMember(3)]

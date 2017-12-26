@@ -45,6 +45,5 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
     {
         Task<bool> InsertIfNotExistsAsync(IBalanceChangeTransaction balanceChangeTransaction);
         Task<IEnumerable<IBalanceChangeTransaction>> GetAsync(string hash);
-        Task<IBalanceChangeTransaction> GetAsync(string hash, string clientId);
     }
 }

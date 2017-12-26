@@ -31,7 +31,7 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
 
         public async Task Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson());
+            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
             var id = Guid.NewGuid().ToString("N");
             var asset = command.Asset;
             var amount = command.Amount;
@@ -56,7 +56,7 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                 // todo: handle ME error
             }
 
-            eventPublisher.PublishEvent(new TransactionConfirmedEvent { Transaction = command.Transaction, Asset = command.Asset, Amount = command.Amount });
+            eventPublisher.PublishEvent(new TransactionProcessedEvent { ClientId = command.Transaction.ClientId, Asset = command.Asset, Amount = command.Amount });
         }
     }
 }

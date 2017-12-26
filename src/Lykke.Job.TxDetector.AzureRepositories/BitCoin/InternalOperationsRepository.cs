@@ -52,12 +52,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             _tableStorage = tableStorage;
         }
 
-        public async Task InsertAsync(IInternalOperation operation)
-        {
-            var entity = InternalOperationEntity.Create(operation);
-            await _tableStorage.InsertAsync(entity);
-        }
-
         public async Task<IInternalOperation> GetAsync(string hash)
         {
             return (await _tableStorage.GetDataAsync(InternalOperationEntity.GeneratePartitionKey(hash))).FirstOrDefault();

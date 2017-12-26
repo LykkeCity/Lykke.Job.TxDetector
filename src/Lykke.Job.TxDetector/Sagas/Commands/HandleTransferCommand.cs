@@ -7,7 +7,5 @@ namespace Lykke.Job.TxDetector.Sagas.Commands
     {
         [ProtoMember(1)]
         public string TransferId { get; set; }
-        [ProtoMember(2)]
-        public string ClientId { get; set; }
     }
 }

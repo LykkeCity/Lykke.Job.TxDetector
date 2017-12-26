@@ -8,12 +8,6 @@ namespace Lykke.Job.TxDetector.Core.Domain.Settings
         bool BitcoinBlockchainOperationsDisabled { get; }
     }
 
-    public class AppGlobalSettings : IAppGlobalSettings
-    {
-        public bool BtcOperationsDisabled { get; set; }
-        public bool BitcoinBlockchainOperationsDisabled { get; set; }
-    }
-
     public interface IAppGlobalSettingsRepositry
     {
         Task<IAppGlobalSettings> GetAsync();

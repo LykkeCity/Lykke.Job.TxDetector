@@ -27,7 +27,6 @@ namespace Lykke.Job.TxDetector.Core
             public string LogsConnString { get; set; }
             public string BitCoinQueueConnectionString { get; set; }
             public string ClientPersonalInfoConnString { get; set; }
-            public string HTradesConnString { get; set; }
         }
 
         public class NotificationsSettings
@@ -74,8 +73,6 @@ namespace Lykke.Job.TxDetector.Core
         public class SlackNotificationsSettings
         {
             public AzureQueueSettings AzureQueue { get; set; }
-
-            public int ThrottlingLimitSeconds { get; set; }
         }
 
         public class AzureQueueSettings
@@ -86,5 +83,5 @@ namespace Lykke.Job.TxDetector.Core
         }
     }
 
-    
+
 }

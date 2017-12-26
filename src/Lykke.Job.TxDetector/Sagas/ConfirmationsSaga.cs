@@ -4,9 +4,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
-using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
-using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Resources;
 using Lykke.Job.TxDetector.Sagas.Commands;
@@ -16,8 +14,6 @@ namespace Lykke.Job.TxDetector.Sagas
 {
     public class ConfirmationsSaga
     {
-        private readonly AppSettings.TxDetectorSettings _settings;
-        private readonly ISrvBlockchainReader _srvBlockchainReader;
         private readonly ILog _log;
         private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly IClientAccountsRepository _clientAccountsRepository;
@@ -25,40 +21,11 @@ namespace Lykke.Job.TxDetector.Sagas
         public ConfirmationsSaga(
             ILog log,
             [NotNull] IClientSettingsRepository clientSettingsRepository,
-            [NotNull] IClientAccountsRepository clientAccountsRepository, 
-            AppSettings.TxDetectorSettings settings, 
-            ISrvBlockchainReader srvBlockchainReader)
+            [NotNull] IClientAccountsRepository clientAccountsRepository)
         {
             _log = log;
-            _settings = settings;
-            _srvBlockchainReader = srvBlockchainReader;
             _clientAccountsRepository = clientAccountsRepository ?? throw new ArgumentNullException(nameof(clientAccountsRepository));
             _clientSettingsRepository = clientSettingsRepository ?? throw new ArgumentNullException(nameof(clientSettingsRepository));
-        }
-
-        // entry point
-        private async Task Handle(TransactionDetectedEvent evt, ICommandSender sender)
-        {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOperationCreatedEvent), evt.ToJson());
-
-            var confirmations = await _srvBlockchainReader.GetConfirmationsCount(evt.TransactionHash);
-
-            if (confirmations >= _settings.TxDetectorConfirmationsLimit)
-            {
-                var cmd = new ProcessTransactionCommand
-                {
-                    TransactionHash = evt.TransactionHash
-                };
-                sender.SendCommand(cmd, "confirmations");
-            }
-            else
-            {
-                throw new Exception();
-                //put back if not confirmed yet
-                //context.MoveMessageToEnd(message);
-                //context.SetCountQueueBasedDelay(500, 100);
-            }
-
         }
 
         private async Task Handle(CashInOperationCreatedEvent evt, ICommandSender sender)
@@ -81,37 +48,36 @@ namespace Lykke.Job.TxDetector.Sagas
 
             var cmd = new HandleTransferCommand
             {
-                TransferId = evt.TransferId,
-                ClientId = evt.ClientId
+                TransferId = evt.TransferId
             };
 
             sender.SendCommand(cmd, "transfer");
         }
 
-        private async Task Handle(TransactionConfirmedEvent evt, ICommandSender sender)
+        private async Task Handle(TransactionProcessedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransferOperationCreatedEvent), evt.ToJson());
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransactionProcessedEvent), evt.ToJson());
 
-            var clientAcc = await _clientAccountsRepository.GetByIdAsync(evt.Transaction.ClientId);
+            var clientAcc = await _clientAccountsRepository.GetByIdAsync(evt.ClientId);
 
             var cmd = new SendNoRefundDepositDoneMailCommand
             {
                 Email = clientAcc.Email,
                 Amount = evt.Amount,
-                AssetBcnId = evt.Asset.Id
+                AssetId = evt.Asset.Id
             };
-            sender.SendCommand(cmd, "transfer");
+            sender.SendCommand(cmd, "email");
 
-            var pushSettings = await _clientSettingsRepository.GetSettings<PushNotificationsSettings>(evt.Transaction.ClientId);
+            var pushSettings = await _clientSettingsRepository.GetSettings<PushNotificationsSettings>(evt.ClientId);
             if (pushSettings.Enabled)
             {
                 var cmd2 = new SendNotificationCommand
                 {
-                    NotificationsIds = new[] { clientAcc.NotificationsId },
+                    NotificationId = clientAcc.NotificationsId,
                     Type = NotificationType.TransactionConfirmed,
                     Message = string.Format(TextResources.CashInSuccessText, evt.Amount.GetFixedAsString(evt.Asset.Accuracy), evt.Asset.Id)
                 };
-                sender.SendCommand(cmd2, "transfer");
+                sender.SendCommand(cmd2, "notifications");
             }
         }
     }

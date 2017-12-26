@@ -26,7 +26,7 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
 
         public async Task Handle(HandleTransferCommand command)
         {
-            await _log.WriteInfoAsync(nameof(TransferHandler), nameof(HandleTransferCommand), command.ToJson());
+            await _log.WriteInfoAsync(nameof(TransferHandler), nameof(HandleTransferCommand), command.ToJson(), "");
 
             //not need for offchain
             //await _transferEventsRepository.SetIsSettledIfExistsAsync(clientId, transferId, false);

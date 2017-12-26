@@ -7,7 +7,7 @@ namespace Lykke.Job.TxDetector.Sagas.Commands
     public class SendNotificationCommand
     {
         [ProtoMember(1)]
-        public string[] NotificationsIds { get; set; }
+        public string NotificationId { get; set; }
         [ProtoMember(2)]
         public NotificationType Type { get; set; }
         [ProtoMember(3)]

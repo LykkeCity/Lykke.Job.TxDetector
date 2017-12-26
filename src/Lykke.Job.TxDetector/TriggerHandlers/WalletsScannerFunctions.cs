@@ -5,13 +5,12 @@ using System.Net;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
-using Lykke.Job.TxDetector.Sagas.Events;
+using Lykke.Job.TxDetector.Sagas.Commands;
 using Lykke.JobTriggers.Triggers.Attributes;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 
@@ -28,7 +27,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
         private readonly AppSettings.TxDetectorSettings _txDetectorSettings;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
-        private readonly IEventPublisher _eventPublisher;
+        private readonly ICqrsEngine _cqrsEngine;
 
         private int _currentBlockHeight;
 
@@ -38,7 +37,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             AppSettings.TxDetectorSettings txDetectorSettings,
             IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
-            [NotNull] IEventPublisher eventPublisher)
+            ICqrsEngine cqrsEngine)
         {
             _walletCredentialsRepository = walletCredentialsRepository;
             _srvBlockchainReader = srvBlockchainReader;
@@ -49,7 +48,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
             _txDetectorSettings = txDetectorSettings;
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
-            _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
+            _cqrsEngine = cqrsEngine;
         }
 
         [TimerTrigger("00:02:00")]
@@ -153,7 +152,12 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                      || IsExternalCashIn(walletCredentials, tx, internalOperation)
                      || IsOtherClientsCashOut(walletCredentials, tx, internalOperation))
             {
-                _eventPublisher.PublishEvent(new TransactionDetectedEvent { TransactionHash = balanceChangeTx.Hash });
+                var createTradeCommand = new ProcessTransactionCommand
+                {
+                    TransactionHash = balanceChangeTx.Hash
+                };
+
+                _cqrsEngine.SendCommand(createTradeCommand, "confirmations", "confirmations");
             }
         }
 

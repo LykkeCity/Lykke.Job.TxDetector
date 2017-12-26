@@ -82,10 +82,5 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
         {
             return await _tableStorage.GetDataAsync(BalanceChangeTransactionEntity.GeneratePartition(hash));
         }
-
-        public async Task<IBalanceChangeTransaction> GetAsync(string hash, string clientId)
-        {
-            return await _tableStorage.GetDataAsync(BalanceChangeTransactionEntity.GeneratePartition(hash), BalanceChangeTransactionEntity.GenerateRowKey(clientId));
-        }
     }
 }

@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Common;
+using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator.MessagesData;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
 using Lykke.Job.TxDetector.Sagas.Commands;
@@ -7,21 +11,25 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
 {
     public class EmailHandler
     {
+        private readonly ILog _log;
         private readonly IEmailSender _emailSender;
 
-        public EmailHandler(IEmailSender emailSender)
+        public EmailHandler([NotNull] ILog log, [NotNull] IEmailSender emailSender)
         {
-            _emailSender = emailSender;
+            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
         }
 
         public async Task Handle(SendNoRefundDepositDoneMailCommand command)
         {
-            var msgData = new NoRefundDepositDoneData
+            await _log.WriteInfoAsync(nameof(NotificationsHandler), nameof(SendNoRefundDepositDoneMailCommand), command.ToJson(), "");
+
+            var content = new NoRefundDepositDoneData
             {
                 Amount = command.Amount,
-                AssetBcnId = command.AssetBcnId
+                AssetBcnId = command.AssetId
             };
-            await _emailSender.SendEmailAsync(command.Email, msgData);
+            await _emailSender.SendEmailAsync(command.Email, content);
         }
     }
 }
