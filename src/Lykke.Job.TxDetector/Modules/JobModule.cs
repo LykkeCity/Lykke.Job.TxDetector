@@ -123,11 +123,6 @@ namespace Lykke.Job.TxDetector.Modules
                 new BalanceChangeTransactionsRepository(
                     AzureTableStorage<BalanceChangeTransactionEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "BalanceChangeTransactions", _log)));
-
-            builder.RegisterInstance<IBlockchainTransactionsCache>(
-                new BlockchainTransactionsCache(
-                    AzureTableStorage<ObsoleteBlockchainTransactionsCacheItem>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "Transactions", _log)));
             
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
