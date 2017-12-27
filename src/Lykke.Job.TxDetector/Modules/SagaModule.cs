@@ -33,13 +33,14 @@ namespace Lykke.Job.TxDetector.Modules
             {
                 ChaosKitty.StateOfChaos = _settings.TxDetectorJob.ChaosKitty.StateOfChaos;
             }
+            var virtualHost = string.Empty; // "/debug";
 
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
 
             var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
                 {
-                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}/debug", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
+                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}{virtualHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
                 }),
                 new RabbitMqTransportFactory());
 
@@ -52,14 +53,13 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailHandler>();
 
             var defaultRetryDelay = (long)TimeSpan.FromSeconds(3).TotalMilliseconds;
-            var exchangePrefix = "lykke.tx-detector";
             builder.Register(ctx => new CqrsEngine(
                 _log,
                 ctx.Resolve<IDependencyResolver>(),
                 messagingEngine,
                 new DefaultEndpointProvider(),
                 true,
-                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: exchangePrefix)),
+                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.ExchangePrefix)),
 
                 Register.BoundedContext("transactions")
                     .FailedCommandRetryDelay(defaultRetryDelay)

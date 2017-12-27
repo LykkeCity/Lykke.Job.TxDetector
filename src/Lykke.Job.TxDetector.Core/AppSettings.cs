@@ -22,6 +22,7 @@ namespace Lykke.Job.TxDetector.Core
             public NotificationsSettings Notifications { get; set; }
             public int TxDetectorConfirmationsLimit { get; set; }
             public int ProcessInParallelCount { get; set; }
+            public string ExchangePrefix { get; set; }
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
         }
