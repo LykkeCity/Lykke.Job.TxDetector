@@ -29,6 +29,11 @@ namespace Lykke.Job.TxDetector.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
+            if (_settings.TxDetectorJob.ChaosKitty != null)
+            {
+                ChaosKitty.StateOfChaos = _settings.TxDetectorJob.ChaosKitty.StateOfChaos;
+            }
+
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
 
             var messagingEngine = new MessagingEngine(_log,
@@ -46,19 +51,18 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<NotificationsHandler>();
             builder.RegisterType<EmailHandler>();
 
-            var timeout = (long)TimeSpan.FromSeconds(3).TotalMilliseconds;
-            //var timeout = 30L;
-            //var timeout = (long)TimeSpan.FromMinutes(1).TotalMilliseconds;
+            var defaultRetryDelay = (long)TimeSpan.FromSeconds(3).TotalMilliseconds;
+            var exchangePrefix = "lykke.tx-detector";
             builder.Register(ctx => new CqrsEngine(
                 _log,
                 ctx.Resolve<IDependencyResolver>(),
                 messagingEngine,
                 new DefaultEndpointProvider(),
                 true,
-                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: "tx-detector")),
+                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: exchangePrefix)),
 
                 Register.BoundedContext("transactions")
-                    .FailedCommandRetryDelay(timeout)
+                    .FailedCommandRetryDelay(defaultRetryDelay)
                     .ListeningCommands(typeof(ProcessTransactionCommand))
                         .On("transactions-commands")
                     .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
@@ -66,13 +70,13 @@ namespace Lykke.Job.TxDetector.Modules
                     .WithCommandsHandler<TransactionHandler>(),
 
                 Register.BoundedContext("transfer")
-                    .FailedCommandRetryDelay(timeout)
+                    .FailedCommandRetryDelay(defaultRetryDelay)
                     .ListeningCommands(typeof(ProcessTransferCommand))
                         .On("transfer-commands")
                     .WithCommandsHandler<TransferHandler>(),
 
                 Register.BoundedContext("cachein")
-                    .FailedCommandRetryDelay(timeout)
+                    .FailedCommandRetryDelay(defaultRetryDelay)
                     .ListeningCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
                         .On("cachein-commands")
                     .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
@@ -80,13 +84,13 @@ namespace Lykke.Job.TxDetector.Modules
                     .WithCommandsHandler<CashInHandler>(),
 
                 Register.BoundedContext("notifications")
-                    .FailedCommandRetryDelay(timeout)
+                    .FailedCommandRetryDelay(defaultRetryDelay)
                     .ListeningCommands(typeof(SendNotificationCommand))
                         .On("notifications-commands")
                     .WithCommandsHandler<NotificationsHandler>(),
 
                 Register.BoundedContext("email")
-                    .FailedCommandRetryDelay(timeout)
+                    .FailedCommandRetryDelay(defaultRetryDelay)
                     .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
                         .On("email-commands")
                     .WithCommandsHandler<EmailHandler>(),

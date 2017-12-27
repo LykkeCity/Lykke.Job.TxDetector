@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Lykke.Service.OperationsRepository.Client;
+using Lykke.SettingsReader.Attributes;
 
 namespace Lykke.Job.TxDetector.Core
 {
@@ -21,6 +22,13 @@ namespace Lykke.Job.TxDetector.Core
             public NotificationsSettings Notifications { get; set; }
             public int TxDetectorConfirmationsLimit { get; set; }
             public int ProcessInParallelCount { get; set; }
+            [Optional]
+            public ChaosSettings ChaosKitty { get; set; }
+        }
+
+        public class ChaosSettings
+        {
+            public double StateOfChaos { get; set; }
         }
 
         public class DbSettings
