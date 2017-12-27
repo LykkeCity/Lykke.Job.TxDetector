@@ -38,6 +38,8 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
 
     public interface IWalletCredentialsRepository
     {
+        Task<IWalletCredentials> GetAsync(string clientId);
+
         Task ScanAllAsync(Func<IEnumerable<IWalletCredentials>, Task> chunk);
     }
 

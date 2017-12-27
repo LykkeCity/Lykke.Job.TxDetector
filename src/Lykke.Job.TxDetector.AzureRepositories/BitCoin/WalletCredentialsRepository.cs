@@ -15,6 +15,12 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             {
                 return "Wallet";
             }
+
+            public static string GenerateRowKey(string clientId)
+            {
+                return clientId;
+            }
+
         }
 
         public string ClientId { get; set; }
@@ -42,6 +48,19 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
         public WalletCredentialsRepository(INoSQLTableStorage<WalletCredentialsEntity> tableStorage)
         {
             _tableStorage = tableStorage;
+        }
+
+        public async Task<IWalletCredentials> GetAsync(string clientId)
+        {
+            var partitionKey = WalletCredentialsEntity.ByClientId.GeneratePartitionKey();
+            var rowKey = WalletCredentialsEntity.ByClientId.GenerateRowKey(clientId);
+
+            var entity = await _tableStorage.GetDataAsync(partitionKey, rowKey);
+
+            if (entity == null)
+                return null;
+
+            return string.IsNullOrEmpty(entity.MultiSig) ? null : entity;
         }
 
         public Task ScanAllAsync(Func<IEnumerable<IWalletCredentials>, Task> chunk)
