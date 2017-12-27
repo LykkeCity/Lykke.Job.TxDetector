@@ -1,10 +1,10 @@
-﻿using Lykke.Job.TxDetector.Sagas.Models;
+﻿using Lykke.Job.TxDetector.Models;
 using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Commands
+namespace Lykke.Job.TxDetector.Commands
 {
     [ProtoContract]
-    public class RegisterCachInOutCommand
+    public class ProcessCashInCommand
     {
         [ProtoMember(1)]
         public Transaction Transaction { get; set; }

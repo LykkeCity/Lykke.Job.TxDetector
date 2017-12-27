@@ -1,7 +1,7 @@
 ﻿using Lykke.Job.TxDetector.Core.Services.Notifications;
 using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Commands
+namespace Lykke.Job.TxDetector.Commands
 {
     [ProtoContract]
     public class SendNotificationCommand

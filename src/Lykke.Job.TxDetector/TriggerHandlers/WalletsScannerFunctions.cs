@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Cqrs;
+using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
-using Lykke.Job.TxDetector.Sagas.Commands;
 using Lykke.JobTriggers.Triggers.Attributes;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 

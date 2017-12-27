@@ -4,17 +4,18 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Cqrs;
+using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
-using Lykke.Job.TxDetector.Sagas.Commands;
-using Lykke.Job.TxDetector.Sagas.Events;
-using Lykke.Job.TxDetector.Sagas.Models;
+using Lykke.Job.TxDetector.Events;
+using Lykke.Job.TxDetector.Models;
+using Lykke.Job.TxDetector.Sagas;
 using Lykke.Service.Assets.Client.Custom;
 
-namespace Lykke.Job.TxDetector.Sagas.Handlers
+namespace Lykke.Job.TxDetector.Handlers
 {
     public class TransactionHandler
     {

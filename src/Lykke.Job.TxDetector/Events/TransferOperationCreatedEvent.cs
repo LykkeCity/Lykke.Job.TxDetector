@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Events
+namespace Lykke.Job.TxDetector.Events
 {
     [ProtoContract]
     public class TransferOperationCreatedEvent

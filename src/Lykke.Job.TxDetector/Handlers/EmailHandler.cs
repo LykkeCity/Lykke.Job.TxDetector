@@ -3,11 +3,12 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator.MessagesData;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
-using Lykke.Job.TxDetector.Sagas.Commands;
+using Lykke.Job.TxDetector.Sagas;
 
-namespace Lykke.Job.TxDetector.Sagas.Handlers
+namespace Lykke.Job.TxDetector.Handlers
 {
     public class EmailHandler
     {

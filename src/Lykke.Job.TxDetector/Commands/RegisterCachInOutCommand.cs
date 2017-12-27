@@ -1,10 +1,10 @@
-﻿using Lykke.Job.TxDetector.Sagas.Models;
+﻿using Lykke.Job.TxDetector.Models;
 using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Events
+namespace Lykke.Job.TxDetector.Commands
 {
     [ProtoContract]
-    public class CashInOperationCreatedEvent
+    public class RegisterCachInOutCommand
     {
         [ProtoMember(1)]
         public Transaction Transaction { get; set; }
@@ -12,5 +12,7 @@ namespace Lykke.Job.TxDetector.Sagas.Events
         public Asset Asset { get; set; }
         [ProtoMember(3)]
         public double Amount { get; set; }
+        [ProtoMember(4)]
+        public string CommandId { get; set; }
     }
 }

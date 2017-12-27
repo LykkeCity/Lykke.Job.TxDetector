@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Models
+namespace Lykke.Job.TxDetector.Models
 {
     [ProtoContract]
     public class Asset

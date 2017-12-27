@@ -4,11 +4,11 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
+using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
+using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Resources;
-using Lykke.Job.TxDetector.Sagas.Commands;
-using Lykke.Job.TxDetector.Sagas.Events;
 
 namespace Lykke.Job.TxDetector.Sagas
 {

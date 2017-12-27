@@ -5,14 +5,15 @@ using Common.Log;
 using Inceptum.Messaging;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
-using Lykke.Job.TxDetector.Sagas.Commands;
-using Lykke.Job.TxDetector.Sagas.Events;
+using Lykke.Job.TxDetector.Commands;
+using Lykke.Job.TxDetector.Events;
+using Lykke.Job.TxDetector.Sagas;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 
-namespace Lykke.Job.TxDetector.Sagas.Handlers
+namespace Lykke.Job.TxDetector.Handlers
 {
     public class CashInHandler
     {

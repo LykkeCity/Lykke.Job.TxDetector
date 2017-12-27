@@ -1,7 +1,7 @@
-﻿using Lykke.Job.TxDetector.Sagas.Models;
+﻿using Lykke.Job.TxDetector.Models;
 using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Events
+namespace Lykke.Job.TxDetector.Events
 {
     [ProtoContract]
     public class TransactionProcessedEvent

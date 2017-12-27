@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace Lykke.Job.TxDetector.Sagas.Commands
+namespace Lykke.Job.TxDetector.Commands
 {
     [ProtoContract]
     public class ProcessTransactionCommand

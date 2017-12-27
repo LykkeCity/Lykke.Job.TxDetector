@@ -6,11 +6,11 @@ using Inceptum.Cqrs.Configuration;
 using Inceptum.Messaging;
 using Inceptum.Messaging.RabbitMq;
 using Lykke.Cqrs;
+using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
+using Lykke.Job.TxDetector.Events;
+using Lykke.Job.TxDetector.Handlers;
 using Lykke.Job.TxDetector.Sagas;
-using Lykke.Job.TxDetector.Sagas.Commands;
-using Lykke.Job.TxDetector.Sagas.Events;
-using Lykke.Job.TxDetector.Sagas.Handlers;
 using Lykke.Messaging;
 using Lykke.SettingsReader;
 
