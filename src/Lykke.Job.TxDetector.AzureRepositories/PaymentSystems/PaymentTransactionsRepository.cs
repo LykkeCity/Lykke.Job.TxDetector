@@ -10,30 +10,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.PaymentSystems
 {
     public class PaymentTransactionEntity : TableEntity, IPaymentTransaction
     {
-
-        public static class IndexCommon
-        {
-            public static string GeneratePartitionKey()
-            {
-                return "BCO";
-            }
-
-        }
-
-        public static class IndexByClient
-        {
-            public static string GeneratePartitionKey(string clientId)
-            {
-                return clientId;
-            }
-
-            public static string GenerateRowKey(string orderId)
-            {
-                return orderId;
-            }
-
-        }
-
         public int Id { get; set; }
         public string TransactionId { get; set; }
         string IPaymentTransaction.Id => TransactionId ?? Id.ToString();
@@ -60,11 +36,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.PaymentSystems
         public string Info { get; set; }
         CashInPaymentSystem IPaymentTransaction.PaymentSystem => GetPaymentSystem();
 
-        internal void SetPaymentSystem(CashInPaymentSystem data)
-        {
-            PaymentSystem = data.ToString();
-        }
-
         internal CashInPaymentSystem GetPaymentSystem()
         {
             return PaymentSystem.ParseEnum(CashInPaymentSystem.Unknown);
@@ -77,27 +48,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.PaymentSystems
         public string AssetId { get; set; }
         public double? DepositedAmount { get; set; }
         public string DepositedAssetId { get; set; }
-
-        public static PaymentTransactionEntity Create(IPaymentTransaction src)
-        {
-            var result = new PaymentTransactionEntity
-            {
-                Created = src.Created,
-                TransactionId = src.Id,
-                Info = src.Info,
-                ClientId = src.ClientId,
-                AssetId = src.AssetId,
-                Amount = src.Amount,
-                AggregatorTransactionId = src.AggregatorTransactionId,
-                DepositedAssetId = src.DepositedAssetId
-            };
-
-            result.SetPaymentStatus(src.Status);
-
-            result.SetPaymentSystem(src.PaymentSystem);
-
-            return result;
-        }
 
     }
 

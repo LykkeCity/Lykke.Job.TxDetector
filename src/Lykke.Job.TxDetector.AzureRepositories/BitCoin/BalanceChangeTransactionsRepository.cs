@@ -67,9 +67,9 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
     {
         private readonly INoSQLTableStorage<BalanceChangeTransactionEntity> _tableStorage;
 
-        public BalanceChangeTransactionsRepository(INoSQLTableStorage<BalanceChangeTransactionEntity> _tableStorage)
+        public BalanceChangeTransactionsRepository(INoSQLTableStorage<BalanceChangeTransactionEntity> tableStorage)
         {
-            this._tableStorage = _tableStorage;
+            _tableStorage = tableStorage;
         }
 
         public async Task<bool> InsertIfNotExistsAsync(IBalanceChangeTransaction balanceChangeTransaction)
@@ -81,11 +81,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
         public async Task<IEnumerable<IBalanceChangeTransaction>> GetAsync(string hash)
         {
             return await _tableStorage.GetDataAsync(BalanceChangeTransactionEntity.GeneratePartition(hash));
-        }
-
-        public async Task<IBalanceChangeTransaction> GetAsync(string hash, string clientId)
-        {
-            return await _tableStorage.GetDataAsync(BalanceChangeTransactionEntity.GeneratePartition(hash), BalanceChangeTransactionEntity.GenerateRowKey(clientId));
         }
     }
 }

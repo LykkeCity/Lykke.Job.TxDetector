@@ -1,61 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Lykke.Job.TxDetector.Core.Services.BitCoin
 {
-    public interface IBitcoinTransactionInfo
-    {
-        string Hash { get; }
-        DateTime Date { get; }
-        int Confirmations { get; }
-        string Block { get; }
-        int Height { get; }
-        string SenderId { get; }
-        string AssetId { get; }
-        int Quantity { get; }
-    }
-
-    public class BitcoinTransactionInfo : IBitcoinTransactionInfo
-    {
-        public string Hash { get; set; }
-        public DateTime Date { get; set; }
-        public int Confirmations { get; set; }
-        public string Block { get; set; }
-        public int Height { get; set; }
-        public string SenderId { get; set; }
-        public string AssetId { get; set; }
-        public int Quantity { get; set; }
-    }
-
-
-    public interface IBalanceRecord
-    {
-        string AssetId { get; set; }
-        double Balance { get; set; }
-    }
-
-    public interface IBalanceRecordWithBase : IBalanceRecord
-    {
-        string BaseAssetId { get; set; }
-        double? AmountInBase { get; set; }
-    }
-
-    public class BalanceRecord : IBalanceRecord
-    {
-        public string AssetId { get; set; }
-        public double Balance { get; set; }
-    }
-
-    public class BalanceRecordWithBase : IBalanceRecordWithBase
-    {
-        public string AssetId { get; set; }
-        public double Balance { get; set; }
-        public string BaseAssetId { get; set; }
-        public double? AmountInBase { get; set; }
-    }
-
     public interface IBlockchainTransaction
     {
         string Hash { get; set; }

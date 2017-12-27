@@ -21,15 +21,12 @@ using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
-using Lykke.Job.TxDetector.Core.Services.Messages;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Services;
 using Lykke.Job.TxDetector.Services.BitCoin;
-using Lykke.Job.TxDetector.Services.Messages;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
-using Lykke.Job.TxDetector.TriggerHandlers.Handlers;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
@@ -94,15 +91,9 @@ namespace Lykke.Job.TxDetector.Modules
         {
             builder.RegisterType<SrvNinjaBlockChainReader>().As<ISrvBlockchainReader>().SingleInstance();
 
-            builder.RegisterType<SrvEmailsFacade>().As<ISrvEmailsFacade>().SingleInstance();
-
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
-
-            builder.RegisterType<TransferHandler>().SingleInstance();
-
-            builder.RegisterType<CashInHandler>().SingleInstance();
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -121,16 +112,6 @@ namespace Lykke.Job.TxDetector.Modules
                 new BalanceChangeTransactionsRepository(
                     AzureTableStorage<BalanceChangeTransactionEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "BalanceChangeTransactions", _log)));
-
-            builder.RegisterInstance<IBlockchainTransactionsCache>(
-                new BlockchainTransactionsCache(
-                    AzureTableStorage<ObsoleteBlockchainTransactionsCacheItem>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "Transactions", _log)));
-
-            builder.RegisterInstance<IConfirmPendingTxsQueue>(
-                new ConfirmPendingTxsQueue(
-                    AzureQueueExt.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "txs-confirm-pending")));
 
             builder.RegisterInstance<ILastProcessedBlockRepository>(
                 new LastProcessedBlockRepository(
@@ -175,7 +156,7 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterInstance<IPaymentTransactionsRepository>(
                 new PaymentTransactionsRepository(
                     AzureTableStorage<PaymentTransactionEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log), 
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log),
                     AzureTableStorage<AzureMultiIndex>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "PaymentTransactions", _log)));
         }
@@ -185,7 +166,7 @@ namespace Lykke.Job.TxDetector.Modules
             var socketLog = new SocketLogDynamic(i => { },
                 str => Console.WriteLine(DateTime.UtcNow.ToIsoDateTime() + ": " + str));
 
-            container.BindMeConnector(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
+            container.BindMeClient(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
         }
     }
 }

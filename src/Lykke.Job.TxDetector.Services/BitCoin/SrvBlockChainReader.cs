@@ -15,7 +15,6 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
     {
         private readonly AppSettings.NinjaSettings _ninjaSettings;
         private readonly ILog _log;
-        private const string Base58Symbols = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
         public SrvNinjaBlockChainReader(AppSettings.NinjaSettings ninjaSettings, ILog log)
         {
@@ -60,7 +59,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin
 
                 foreach (var item in data.Operations)
                 {
-                    result.Add(item.ConvertToBlockchainTransaction(_ninjaSettings.IsMainNet)); ;
+                    result.Add(item.ConvertToBlockchainTransaction(_ninjaSettings.IsMainNet));
                 }
 
                 return result;

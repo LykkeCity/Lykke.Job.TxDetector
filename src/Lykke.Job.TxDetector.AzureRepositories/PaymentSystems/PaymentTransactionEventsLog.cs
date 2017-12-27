@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
@@ -51,10 +50,5 @@ namespace Lykke.Job.TxDetector.AzureRepositories.PaymentSystems
             await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(newEntity, newEntity.DateTime);
         }
 
-        public async Task<IEnumerable<IPaymentTransactionLogEvent>> GetAsync(string id)
-        {
-            var partitionKey = PaymentTransactionLogEventEntity.GeneratePartitionKey(id);
-            return await _tableStorage.GetDataAsync(partitionKey);
-        }
     }
 }

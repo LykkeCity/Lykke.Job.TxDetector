@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Lykke.Service.OperationsRepository.Client;
+using Lykke.SettingsReader.Attributes;
 
 namespace Lykke.Job.TxDetector.Core
 {
@@ -10,6 +11,7 @@ namespace Lykke.Job.TxDetector.Core
         public SlackNotificationsSettings SlackNotifications { get; set; }
         public AssetsSettings Assets { get; set; }
         public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
+        public RabbitMqSettings RabbitMq { get; set; }
 
         public class TxDetectorSettings
         {
@@ -20,6 +22,15 @@ namespace Lykke.Job.TxDetector.Core
             public NotificationsSettings Notifications { get; set; }
             public int TxDetectorConfirmationsLimit { get; set; }
             public int ProcessInParallelCount { get; set; }
+            public string ExchangePrefix { get; set; }
+            public long RetryDelayInMilliseconds { get; set; }
+            [Optional]
+            public ChaosSettings ChaosKitty { get; set; }
+        }
+
+        public class ChaosSettings
+        {
+            public double StateOfChaos { get; set; }
         }
 
         public class DbSettings
@@ -27,7 +38,6 @@ namespace Lykke.Job.TxDetector.Core
             public string LogsConnString { get; set; }
             public string BitCoinQueueConnectionString { get; set; }
             public string ClientPersonalInfoConnString { get; set; }
-            public string HTradesConnString { get; set; }
         }
 
         public class NotificationsSettings
@@ -54,8 +64,7 @@ namespace Lykke.Job.TxDetector.Core
 
             public IPEndPoint GetClientIpEndPoint(bool useInternal = false)
             {
-                IPAddress address;
-                if (!IPAddress.TryParse(Host, out address))
+                if (!IPAddress.TryParse(Host, out var address))
                     address = Dns.GetHostAddressesAsync(Host).Result[0];
 
                 return new IPEndPoint(address, Port);
@@ -75,8 +84,6 @@ namespace Lykke.Job.TxDetector.Core
         public class SlackNotificationsSettings
         {
             public AzureQueueSettings AzureQueue { get; set; }
-
-            public int ThrottlingLimitSeconds { get; set; }
         }
 
         public class AzureQueueSettings
@@ -87,5 +94,10 @@ namespace Lykke.Job.TxDetector.Core
         }
     }
 
-    
+    public class RabbitMqSettings
+    {
+        public string ExternalHost { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
 }

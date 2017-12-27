@@ -5,6 +5,8 @@ using System.Net;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Cqrs;
+using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
@@ -23,10 +25,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
         private readonly IInternalOperationsRepository _internalOperationsRepository;
         private readonly ILastProcessedBlockRepository _lastProcessedBlockRepository;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
-        private readonly IConfirmPendingTxsQueue _confirmPendingTxsQueue;
-        private readonly IBlockchainTransactionsCache _blockchainTransactionsCache;
         private readonly AppSettings.TxDetectorSettings _txDetectorSettings;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
+        private readonly ICqrsEngine _cqrsEngine;
 
         private int _currentBlockHeight;
 
@@ -34,10 +35,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             ISrvBlockchainReader srvBlockchainReader, ITradeOperationsRepositoryClient clientTradesRepositoryClient,
             ILog log, IInternalOperationsRepository internalOperationsRepository,
             ILastProcessedBlockRepository lastProcessedBlockRepository, IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
-            IConfirmPendingTxsQueue confirmPendingTxsQueue,
-            IBlockchainTransactionsCache blockchainTransactionsCache,
             AppSettings.TxDetectorSettings txDetectorSettings,
-            IAppGlobalSettingsRepositry appGlobalSettingsRepositry)
+            IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
+            ICqrsEngine cqrsEngine)
         {
             _walletCredentialsRepository = walletCredentialsRepository;
             _srvBlockchainReader = srvBlockchainReader;
@@ -46,10 +46,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _internalOperationsRepository = internalOperationsRepository;
             _lastProcessedBlockRepository = lastProcessedBlockRepository;
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
-            _confirmPendingTxsQueue = confirmPendingTxsQueue;
-            _blockchainTransactionsCache = blockchainTransactionsCache;
             _txDetectorSettings = txDetectorSettings;
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
+            _cqrsEngine = cqrsEngine;
         }
 
         [TimerTrigger("00:02:00")]
@@ -83,22 +82,16 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             }
 
             await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(ScanClients), "",
-                $"Scan finised. Scan duration: {DateTime.UtcNow - dtStart}");
+                $"Scan finished. Scan duration: {DateTime.UtcNow - dtStart}");
         }
 
         private async Task HandleWallets(IEnumerable<IWalletCredentials> walletCredentials)
         {
             foreach (var chunk in walletCredentials.ToChunks(_txDetectorSettings.ProcessInParallelCount))
             {
-                var tasks = new List<Task>();
-                foreach (var item in chunk)
-                {
-                    tasks.Add(HandleWallet(item));
-                }
-
                 try
                 {
-                    await Task.WhenAll(tasks);
+                    await Task.WhenAll(chunk.Select(HandleWallet));
                 }
                 catch (Exception ex)
                 {
@@ -123,8 +116,12 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                 var balanceChangeTx = BalanceChangeTransaction.Create(tx,
                     walletCredentials.ClientId, walletCredentials.MultiSig);
 
-                //check if transaction was already proccessed (ninja issue https://github.com/MetacoSA/QBitNinja/issues/24 or some fail during processing occured)
+                //check if transaction was already processed (ninja issue https://github.com/MetacoSA/QBitNinja/issues/24 or some fail during processing occurred)
                 var shouldBeProcessed = await _balanceChangeTransactionsRepository.InsertIfNotExistsAsync(balanceChangeTx);
+
+                await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(HandleWallet),
+                    $"ClientId: {balanceChangeTx.ClientId}, tx hash: {balanceChangeTx.Hash}",
+                    $"Got transaction; shouldBeProcessed: {shouldBeProcessed}");
 
                 if (shouldBeProcessed)
                     await HandleDetectedTransaction(walletCredentials, tx, balanceChangeTx);
@@ -150,7 +147,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             {
                 foreach (var id in internalOperation.OperationIds)
                 {
-                    await  _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
+                    await _clientTradesRepositoryClient.SetDetectionTimeAndConfirmations(
                             walletCredentials.ClientId, id, DateTime.UtcNow,
                             tx.Confirmations);
                 }
@@ -159,7 +156,12 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                      || IsExternalCashIn(walletCredentials, tx, internalOperation)
                      || IsOtherClientsCashOut(walletCredentials, tx, internalOperation))
             {
-                await _confirmPendingTxsQueue.PutAsync(new PendingTxMsg { Hash = balanceChangeTx.Hash });
+                var processTransactionCommand = new ProcessTransactionCommand
+                {
+                    TransactionHash = balanceChangeTx.Hash
+                };
+
+                _cqrsEngine.SendCommand(processTransactionCommand, "transactions", "transactions");
             }
         }
 
