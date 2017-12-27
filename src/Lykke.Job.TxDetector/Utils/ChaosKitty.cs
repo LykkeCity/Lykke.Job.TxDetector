@@ -5,12 +5,25 @@ namespace Lykke.Job.TxDetector.Utils
     public static class ChaosKitty
     {
         private static readonly Random Randmom = new Random();
+        private static double _stateOfChaos;
 
-        public static double StateOfChaos = 0.0;
+        public static double StateOfChaos
+        {
+            set
+            {
+                if (value < 0.0 || value > 1.0)
+                    throw new ArgumentOutOfRangeException();
+
+                _stateOfChaos = value;
+            }
+        }
 
         public static void Meow()
         {
-            if (Randmom.NextDouble() < StateOfChaos)
+            if (_stateOfChaos < double.Epsilon)
+                return;
+
+            if (Randmom.NextDouble() < _stateOfChaos)
                 throw new Exception("Meow");
         }
     }
