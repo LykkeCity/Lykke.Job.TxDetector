@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
@@ -7,10 +6,6 @@ using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
-using Inceptum.Cqrs.Configuration;
-using Inceptum.Messaging;
-using Inceptum.Messaging.RabbitMq;
-using Lykke.Cqrs;
 using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
 using Lykke.Job.TxDetector.AzureRepositories.Clients;
@@ -28,16 +23,11 @@ using Lykke.Job.TxDetector.Core.Services;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
-using Lykke.Job.TxDetector.Sagas;
-using Lykke.Job.TxDetector.Sagas.Commands;
-using Lykke.Job.TxDetector.Sagas.Events;
-using Lykke.Job.TxDetector.Sagas.Handlers;
 using Lykke.Job.TxDetector.Services;
 using Lykke.Job.TxDetector.Services.BitCoin;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
-using Lykke.Messaging;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,7 +83,6 @@ namespace Lykke.Job.TxDetector.Modules
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
             BindServices(builder);
-            BindSaga(builder);
 
             builder.Populate(_services);
         }
@@ -178,95 +167,6 @@ namespace Lykke.Job.TxDetector.Modules
                 str => Console.WriteLine(DateTime.UtcNow.ToIsoDateTime() + ": " + str));
 
             container.BindMeClient(_settings.TxDetectorJob.MatchingEngine.IpEndpoint.GetClientIpEndPoint(), socketLog);
-        }
-
-        private void BindSaga(ContainerBuilder container)
-        {
-            container.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
-
-            var messagingEngine = new MessagingEngine(_log,
-                new TransportResolver(new Dictionary<string, TransportInfo>
-                {
-                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
-                }),
-                new RabbitMqTransportFactory());
-
-            container.RegisterType<ConfirmationsSaga>();
-
-            container.RegisterType<TransactionHandler>();
-            container.RegisterType<TransferHandler>();
-            container.RegisterType<CashInHandler>();
-            container.RegisterType<NotificationsHandler>();
-            container.RegisterType<EmailHandler>();
-
-            container.Register(ctx => new CqrsEngine(
-                _log,
-                ctx.Resolve<IDependencyResolver>(),
-                messagingEngine,
-                new DefaultEndpointProvider(),
-                true,
-                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: "dev-tx-handler")),
-
-                Register.BoundedContext("transactions")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(3).TotalMilliseconds)
-                    .ListeningCommands(typeof(ProcessTransactionCommand))
-                        .On("transactions-commands")
-                    .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
-                        .With("transactions-events")
-                    .WithCommandsHandler<TransactionHandler>(),
-
-                Register.BoundedContext("transfer")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
-                    .ListeningCommands(typeof(HandleTransferCommand))
-                        .On("transfer-commands")
-                    .WithCommandsHandler<TransferHandler>(),
-
-                Register.BoundedContext("cachein")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
-                    .ListeningCommands(typeof(ProcessCashInCommand))
-                        .On("cachein-commands")
-                    .PublishingEvents(typeof(TransactionProcessedEvent))
-                        .With("cachein-events")
-                    .WithCommandsHandler<CashInHandler>(),
-
-                Register.BoundedContext("notifications")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromSeconds(5).TotalMilliseconds)
-                    .ListeningCommands(typeof(SendNotificationCommand))
-                        .On("notifications-commands")
-                    .WithCommandsHandler<NotificationsHandler>(),
-
-                Register.BoundedContext("email")
-                    .FailedCommandRetryDelay((long)TimeSpan.FromMinutes(1).TotalMilliseconds)
-                    .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .On("email-commands")
-                    .WithCommandsHandler<EmailHandler>(),
-
-                Register.Saga<ConfirmationsSaga>("transactions-saga")
-                    .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
-                        .From("transactions").On("transactions-events")
-                    .ListeningEvents(typeof(TransactionProcessedEvent))
-                        .From("cachein").On("cachein-events")
-                    .PublishingCommands(typeof(HandleTransferCommand))
-                        .To("transfer").With("transfer-commands")
-                    .PublishingCommands(typeof(ProcessCashInCommand))
-                        .To("cachein").With("cachein-commands")
-                    .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .To("email").With("email-commands")
-                    .PublishingCommands(typeof(SendNotificationCommand))
-                        .To("notifications").With("notifications-commands"),
-
-                Register.DefaultRouting
-                    .PublishingCommands(typeof(ProcessTransactionCommand))
-                        .To("transactions").With("transactions-commands")
-                    .PublishingCommands(typeof(HandleTransferCommand))
-                        .To("transfer").With("transfer-commands")
-                    .PublishingCommands(typeof(ProcessCashInCommand))
-                        .To("cachein").With("cachein-commands")
-                    .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .To("email").With("email-commands")
-                    .PublishingCommands(typeof(SendNotificationCommand))
-                        .To("notifications").With("notifications-commands")))
-            .As<ICqrsEngine>().SingleInstance();
         }
     }
 }

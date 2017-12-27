@@ -3,7 +3,7 @@
 namespace Lykke.Job.TxDetector.Sagas.Commands
 {
     [ProtoContract]
-    public class HandleTransferCommand
+    public class ProcessTransferCommand
     {
         [ProtoMember(1)]
         public string TransferId { get; set; }

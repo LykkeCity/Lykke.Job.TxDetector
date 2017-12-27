@@ -152,12 +152,12 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                      || IsExternalCashIn(walletCredentials, tx, internalOperation)
                      || IsOtherClientsCashOut(walletCredentials, tx, internalOperation))
             {
-                var createTradeCommand = new ProcessTransactionCommand
+                var processTransactionCommand = new ProcessTransactionCommand
                 {
                     TransactionHash = balanceChangeTx.Hash
                 };
 
-                _cqrsEngine.SendCommand(createTradeCommand, "transactions", "transactions");
+                _cqrsEngine.SendCommand(processTransactionCommand, "transactions", "transactions");
             }
         }
 

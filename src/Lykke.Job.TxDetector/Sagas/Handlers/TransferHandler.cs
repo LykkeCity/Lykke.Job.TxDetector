@@ -24,9 +24,9 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
             _paymentTransactionEventsLog = paymentTransactionEventsLog ?? throw new ArgumentNullException(nameof(paymentTransactionEventsLog));
         }
 
-        public async Task Handle(HandleTransferCommand command)
+        public async Task Handle(ProcessTransferCommand command)
         {
-            await _log.WriteInfoAsync(nameof(TransferHandler), nameof(HandleTransferCommand), command.ToJson(), "");
+            await _log.WriteInfoAsync(nameof(TransferHandler), nameof(ProcessTransferCommand), command.ToJson(), "");
 
             ChaosKitty.Meow();
 
@@ -38,10 +38,10 @@ namespace Lykke.Job.TxDetector.Sagas.Handlers
                 ChaosKitty.Meow();
 
                 await _paymentTransactionEventsLog.WriteAsync(PaymentTransactionLogEvent.Create(
-                    command.TransferId, 
-                    "",
-                    "Confirmed", 
-                    "Tx Detector"));
+                    transactionId: command.TransferId,
+                    techData: "",
+                    message: "Confirmed",
+                    who: "Tx Detector"));
             }
         }
     }

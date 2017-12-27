@@ -34,12 +34,29 @@ namespace Lykke.Job.TxDetector.Sagas
 
             ChaosKitty.Meow();
 
-            var cmd = new ProcessCashInCommand
+            var cmd = new RegisterCachInOutCommand
             {
                 Transaction = evt.Transaction,
                 Asset = evt.Asset,
                 Amount = evt.Amount,
                 CommandId = Guid.NewGuid().ToString("N")
+            };
+
+            sender.SendCommand(cmd, "cachein");
+        }
+
+        private async Task Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
+        {
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOutOperationRegisteredEvent), evt.ToJson());
+
+            ChaosKitty.Meow();
+
+            var cmd = new ProcessCashInCommand
+            {
+                Transaction = evt.Transaction,
+                Asset = evt.Asset,
+                Amount = evt.Amount,
+                CommandId = evt.CommandId
             };
 
             sender.SendCommand(cmd, "cachein");
@@ -51,7 +68,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
             ChaosKitty.Meow();
 
-            var cmd = new HandleTransferCommand
+            var cmd = new ProcessTransferCommand
             {
                 TransferId = evt.TransferId
             };
