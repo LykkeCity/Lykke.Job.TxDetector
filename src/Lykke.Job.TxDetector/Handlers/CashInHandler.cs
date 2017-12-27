@@ -32,7 +32,7 @@ namespace Lykke.Job.TxDetector.Handlers
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient;
         }
 
-        public async Task Handle(RegisterCachInOutCommand command, IEventPublisher eventPublisher)
+        public async Task Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
         {
             await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
             var id = command.CommandId;

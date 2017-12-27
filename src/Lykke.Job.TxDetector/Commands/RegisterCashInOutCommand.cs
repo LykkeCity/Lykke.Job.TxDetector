@@ -4,7 +4,7 @@ using ProtoBuf;
 namespace Lykke.Job.TxDetector.Commands
 {
     [ProtoContract]
-    public class RegisterCachInOutCommand
+    public class RegisterCashInOutCommand
     {
         [ProtoMember(1)]
         public Transaction Transaction { get; set; }

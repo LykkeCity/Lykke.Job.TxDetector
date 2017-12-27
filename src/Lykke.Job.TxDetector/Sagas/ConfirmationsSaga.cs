@@ -35,7 +35,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
             ChaosKitty.Meow();
 
-            var cmd = new RegisterCachInOutCommand
+            var cmd = new RegisterCashInOutCommand
             {
                 Transaction = evt.Transaction,
                 Asset = evt.Asset,
@@ -43,7 +43,7 @@ namespace Lykke.Job.TxDetector.Sagas
                 CommandId = Guid.NewGuid().ToString("N")
             };
 
-            sender.SendCommand(cmd, "cachein");
+            sender.SendCommand(cmd, "cashin");
         }
 
         private async Task Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
@@ -60,7 +60,7 @@ namespace Lykke.Job.TxDetector.Sagas
                 CommandId = evt.CommandId
             };
 
-            sender.SendCommand(cmd, "cachein");
+            sender.SendCommand(cmd, "cashin");
         }
 
         private async Task Handle(TransferOperationCreatedEvent evt, ICommandSender sender)
