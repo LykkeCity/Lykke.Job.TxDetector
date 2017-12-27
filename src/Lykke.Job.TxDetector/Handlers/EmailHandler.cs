@@ -25,7 +25,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task Handle(SendNoRefundDepositDoneMailCommand command)
         {
-            await _log.WriteInfoAsync(nameof(NotificationsHandler), nameof(SendNoRefundDepositDoneMailCommand), command.ToJson(), "");
+            await _log.WriteInfoAsync(nameof(EmailHandler), nameof(SendNoRefundDepositDoneMailCommand), command.ToJson(), "");
 
             ChaosKitty.Meow();
 
