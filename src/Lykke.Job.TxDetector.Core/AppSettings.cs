@@ -96,11 +96,7 @@ namespace Lykke.Job.TxDetector.Core
 
     public class RabbitMqSettings
     {
-        public string ConnectionString { get; set; }
-
         public string ExternalHost { get; set; }
-
-        public int Port { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
     }
