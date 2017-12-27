@@ -10,6 +10,7 @@ using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Handlers;
+using Lykke.Job.TxDetector.Projections;
 using Lykke.Job.TxDetector.Sagas;
 using Lykke.Messaging;
 using Lykke.SettingsReader;
@@ -51,75 +52,88 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<CashInHandler>();
             builder.RegisterType<NotificationsHandler>();
             builder.RegisterType<EmailHandler>();
+            builder.RegisterType<EventLogProjection>();
 
             var defaultRetryDelay = (long)TimeSpan.FromSeconds(3).TotalMilliseconds;
-            builder.Register(ctx => new CqrsEngine(
-                _log,
-                ctx.Resolve<IDependencyResolver>(),
-                messagingEngine,
-                new DefaultEndpointProvider(),
-                true,
-                Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.ExchangePrefix)),
+            builder.Register(ctx =>
+            {
+                var projection = ctx.Resolve<EventLogProjection>();
 
-                Register.BoundedContext("transactions")
-                    .FailedCommandRetryDelay(defaultRetryDelay)
-                    .ListeningCommands(typeof(ProcessTransactionCommand))
-                        .On("transactions-commands")
-                    .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
-                        .With("transactions-events")
-                    .WithCommandsHandler<TransactionHandler>(),
+                return new CqrsEngine(
+                    _log,
+                    ctx.Resolve<IDependencyResolver>(),
+                    messagingEngine,
+                    new DefaultEndpointProvider(),
+                    true,
+                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.ExchangePrefix)),
 
-                Register.BoundedContext("transfer")
-                    .FailedCommandRetryDelay(defaultRetryDelay)
-                    .ListeningCommands(typeof(ProcessTransferCommand))
-                        .On("transfer-commands")
-                    .WithCommandsHandler<TransferHandler>(),
+                    Register.BoundedContext("transactions")
+                        .FailedCommandRetryDelay(defaultRetryDelay)
+                        .ListeningCommands(typeof(ProcessTransactionCommand))
+                            .On("transactions-commands")
+                        .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
+                            .With("transactions-events")
+                        .WithCommandsHandler<TransactionHandler>(),
 
-                Register.BoundedContext("cachein")
-                    .FailedCommandRetryDelay(defaultRetryDelay)
-                    .ListeningCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
-                        .On("cachein-commands")
-                    .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
-                        .With("cachein-events")
-                    .WithCommandsHandler<CashInHandler>(),
+                    Register.BoundedContext("transfer")
+                        .FailedCommandRetryDelay(defaultRetryDelay)
+                        .ListeningCommands(typeof(ProcessTransferCommand))
+                            .On("transfer-commands")
+                        .PublishingEvents(typeof(TransferProcessedEvent))
+                            .With("transfer-events")
+                        .WithCommandsHandler<TransferHandler>(),
 
-                Register.BoundedContext("notifications")
-                    .FailedCommandRetryDelay(defaultRetryDelay)
-                    .ListeningCommands(typeof(SendNotificationCommand))
-                        .On("notifications-commands")
-                    .WithCommandsHandler<NotificationsHandler>(),
+                    Register.BoundedContext("cachein")
+                        .FailedCommandRetryDelay(defaultRetryDelay)
+                        .ListeningCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
+                            .On("cachein-commands")
+                        .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
+                            .With("cachein-events")
+                        .WithCommandsHandler<CashInHandler>(),
 
-                Register.BoundedContext("email")
-                    .FailedCommandRetryDelay(defaultRetryDelay)
-                    .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .On("email-commands")
-                    .WithCommandsHandler<EmailHandler>(),
+                    Register.BoundedContext("notifications")
+                        .FailedCommandRetryDelay(defaultRetryDelay)
+                        .ListeningCommands(typeof(SendNotificationCommand))
+                            .On("notifications-commands")
+                        .WithCommandsHandler<NotificationsHandler>(),
 
-                Register.Saga<ConfirmationsSaga>("transactions-saga")
-                    .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
-                        .From("transactions").On("transactions-events")
-                    .ListeningEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
-                        .From("cachein").On("cachein-events")
-                    .PublishingCommands(typeof(ProcessTransferCommand))
-                        .To("transfer").With("transfer-commands")
-                    .PublishingCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
-                        .To("cachein").With("cachein-commands")
-                    .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .To("email").With("email-commands")
-                    .PublishingCommands(typeof(SendNotificationCommand))
-                        .To("notifications").With("notifications-commands"),
+                    Register.BoundedContext("email")
+                        .FailedCommandRetryDelay(defaultRetryDelay)
+                        .ListeningCommands(typeof(SendNoRefundDepositDoneMailCommand))
+                            .On("email-commands")
+                        .WithCommandsHandler<EmailHandler>(),
 
-                Register.DefaultRouting
-                    .PublishingCommands(typeof(ProcessTransactionCommand))
-                        .To("transactions").With("transactions-commands")
-                    .PublishingCommands(typeof(ProcessTransferCommand))
-                        .To("transfer").With("transfer-commands")
-                    .PublishingCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
-                        .To("cachein").With("cachein-commands")
-                    .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                        .To("email").With("email-commands")
-                    .PublishingCommands(typeof(SendNotificationCommand))
-                        .To("notifications").With("notifications-commands")))
+                    Register.BoundedContext("history")
+                        .ListeningEvents(typeof(TransferProcessedEvent))
+                            .From("transfer").On("transfer-events")
+                        .WithProjection(projection, "transfer"),
+
+                    Register.Saga<ConfirmationsSaga>("transactions-saga")
+                        .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
+                            .From("transactions").On("transactions-events")
+                        .ListeningEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
+                            .From("cachein").On("cachein-events")
+                        .PublishingCommands(typeof(ProcessTransferCommand))
+                            .To("transfer").With("transfer-commands")
+                        .PublishingCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
+                            .To("cachein").With("cachein-commands")
+                        .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
+                            .To("email").With("email-commands")
+                        .PublishingCommands(typeof(SendNotificationCommand))
+                            .To("notifications").With("notifications-commands"),
+
+                    Register.DefaultRouting
+                        .PublishingCommands(typeof(ProcessTransactionCommand))
+                            .To("transactions").With("transactions-commands")
+                        .PublishingCommands(typeof(ProcessTransferCommand))
+                            .To("transfer").With("transfer-commands")
+                        .PublishingCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
+                            .To("cachein").With("cachein-commands")
+                        .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
+                            .To("email").With("email-commands")
+                        .PublishingCommands(typeof(SendNotificationCommand))
+                            .To("notifications").With("notifications-commands"));
+            })
             .As<ICqrsEngine>().SingleInstance();
         }
     }

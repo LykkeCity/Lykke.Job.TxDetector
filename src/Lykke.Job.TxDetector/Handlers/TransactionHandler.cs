@@ -79,9 +79,11 @@ namespace Lykke.Job.TxDetector.Handlers
             {
                 var alreadyProcessed = !await _confirmedTransactionsRepository.SaveConfirmedIfNotExist(hash, tx.ClientId);
                 if (alreadyProcessed)
+                {
+                    await _log.WriteInfoAsync(nameof(TransactionHandler), nameof(ProcessTransactionCommand), "",
+                        $"Transaction with hash {hash} for client {tx.ClientId} is already processed; ignoring it.");
                     continue;
-
-                ChaosKitty.Meow();
+                }
 
                 if (operation != null && operation.CommandType == BitCoinCommands.Transfer)
                 {
