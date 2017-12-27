@@ -20,11 +20,11 @@ namespace Lykke.Job.TxDetector.Sagas
         private readonly IClientAccountsRepository _clientAccountsRepository;
 
         public ConfirmationsSaga(
-            ILog log,
+            [NotNull] ILog log,
             [NotNull] IClientSettingsRepository clientSettingsRepository,
             [NotNull] IClientAccountsRepository clientAccountsRepository)
         {
-            _log = log;
+            _log = log ?? throw new ArgumentNullException(nameof(log));
             _clientAccountsRepository = clientAccountsRepository ?? throw new ArgumentNullException(nameof(clientAccountsRepository));
             _clientSettingsRepository = clientSettingsRepository ?? throw new ArgumentNullException(nameof(clientSettingsRepository));
         }

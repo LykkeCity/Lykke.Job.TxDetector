@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Events;
-using Lykke.Job.TxDetector.Sagas;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
@@ -24,12 +23,12 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public CashInHandler(
             [NotNull] ILog log,
-            IMatchingEngineClient matchingEngineClient,
-            ICashOperationsRepositoryClient cashOperationsRepositoryClient)
+            [NotNull] IMatchingEngineClient matchingEngineClient,
+            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
-            _matchingEngineClient = matchingEngineClient;
-            _cashOperationsRepositoryClient = cashOperationsRepositoryClient;
+            _matchingEngineClient = matchingEngineClient ?? throw new ArgumentNullException(nameof(matchingEngineClient));
+            _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
         }
 
         public async Task Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)

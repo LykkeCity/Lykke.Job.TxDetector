@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
@@ -21,6 +22,7 @@ namespace Lykke.Job.TxDetector.Handlers
     {
         private static readonly TimeSpan RetryTimeoutForTransactionConfirmations = TimeSpan.FromSeconds(10);
 
+        private readonly ILog _log;
         private readonly AppSettings.TxDetectorSettings _settings;
         private readonly ISrvBlockchainReader _srvBlockchainReader;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
@@ -30,28 +32,26 @@ namespace Lykke.Job.TxDetector.Handlers
         private readonly IPostponedCashInRepository _postponedCashInRepository;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
 
-        private readonly ILog _log;
-
         public TransactionHandler(
-            IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
-            IInternalOperationsRepository internalOperationsRepository,
-            ICachedAssetsService assetsService,
-            IConfirmedTransactionsRepository confirmedTransactionsRepository,
-            IPostponedCashInRepository postponedCashInRepository,
-            IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
-            ILog log,
-            AppSettings.TxDetectorSettings settings,
-            ISrvBlockchainReader srvBlockchainReader)
+            [NotNull] ILog log,
+            [NotNull] IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
+            [NotNull] IInternalOperationsRepository internalOperationsRepository,
+            [NotNull] ICachedAssetsService assetsService,
+            [NotNull] IConfirmedTransactionsRepository confirmedTransactionsRepository,
+            [NotNull] IPostponedCashInRepository postponedCashInRepository,
+            [NotNull] IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
+            [NotNull] AppSettings.TxDetectorSettings settings,
+            [NotNull] ISrvBlockchainReader srvBlockchainReader)
         {
-            _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository;
-            _internalOperationsRepository = internalOperationsRepository;
-            _assetsService = assetsService;
-            _confirmedTransactionsRepository = confirmedTransactionsRepository;
-            _postponedCashInRepository = postponedCashInRepository;
-            _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
-            _log = log;
-            _settings = settings;
-            _srvBlockchainReader = srvBlockchainReader;
+            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository ?? throw new ArgumentNullException(nameof(balanceChangeTransactionsRepository));
+            _internalOperationsRepository = internalOperationsRepository ?? throw new ArgumentNullException(nameof(internalOperationsRepository));
+            _assetsService = assetsService ?? throw new ArgumentNullException(nameof(assetsService));
+            _confirmedTransactionsRepository = confirmedTransactionsRepository ?? throw new ArgumentNullException(nameof(confirmedTransactionsRepository));
+            _postponedCashInRepository = postponedCashInRepository ?? throw new ArgumentNullException(nameof(postponedCashInRepository));
+            _appGlobalSettingsRepositry = appGlobalSettingsRepositry ?? throw new ArgumentNullException(nameof(appGlobalSettingsRepositry));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _srvBlockchainReader = srvBlockchainReader ?? throw new ArgumentNullException(nameof(srvBlockchainReader));
         }
 
         // entry point
