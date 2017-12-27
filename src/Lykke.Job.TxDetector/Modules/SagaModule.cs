@@ -12,6 +12,7 @@ using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Handlers;
 using Lykke.Job.TxDetector.Projections;
 using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Utils;
 using Lykke.Messaging;
 using Lykke.SettingsReader;
 
