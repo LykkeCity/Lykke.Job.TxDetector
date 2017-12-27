@@ -12,6 +12,7 @@ using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
+using Microsoft.Rest;
 
 namespace Lykke.Job.TxDetector.Handlers
 {
@@ -41,18 +42,28 @@ namespace Lykke.Job.TxDetector.Handlers
 
             ChaosKitty.Meow();
 
-            await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
+            try
             {
-                Id = id,
-                ClientId = transaction.ClientId,
-                Multisig = transaction.Multisig,
-                AssetId = asset.Id,
-                Amount = amount,
-                BlockChainHash = transaction.Hash,
-                DateTime = DateTime.UtcNow,
-                AddressTo = transaction.Multisig,
-                State = TransactionStates.SettledOnchain
-            });
+                await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
+                {
+                    Id = id,
+                    ClientId = transaction.ClientId,
+                    Multisig = transaction.Multisig,
+                    AssetId = asset.Id,
+                    Amount = amount,
+                    BlockChainHash = transaction.Hash,
+                    DateTime = DateTime.UtcNow,
+                    AddressTo = transaction.Multisig,
+                    State = TransactionStates.SettledOnchain
+                });
+            }
+            catch (HttpOperationException)
+            {
+                var persistedOperation = await _cashOperationsRepositoryClient.GetAsync(transaction.ClientId, id);
+                if (persistedOperation == null)
+                    throw;
+                // else assuming that operation was correctly persisted before
+            }
 
             eventPublisher.PublishEvent(new CashInOutOperationRegisteredEvent
             {
