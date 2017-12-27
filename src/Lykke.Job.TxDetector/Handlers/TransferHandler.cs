@@ -30,9 +30,6 @@ namespace Lykke.Job.TxDetector.Handlers
 
             ChaosKitty.Meow();
 
-            //not need for offchain
-            //await _transferEventsRepository.SetIsSettledIfExistsAsync(clientId, transferId, false);
-
             if (await _paymentTransactionsRepository.SetStatus(command.TransferId, PaymentStatus.NotifyProcessed) != null)
             {
                 eventPublisher.PublishEvent(new TransferProcessedEvent { TransferId = command.TransferId });
