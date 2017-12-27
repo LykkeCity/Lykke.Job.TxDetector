@@ -119,6 +119,10 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
                 //check if transaction was already processed (ninja issue https://github.com/MetacoSA/QBitNinja/issues/24 or some fail during processing occurred)
                 var shouldBeProcessed = await _balanceChangeTransactionsRepository.InsertIfNotExistsAsync(balanceChangeTx);
 
+                await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(HandleWallet),
+                    $"ClientId: {balanceChangeTx.ClientId}, tx hash: {balanceChangeTx.Hash}",
+                    "Got transaction; shouldBeProcessed: {shouldBeProcessed}");
+
                 if (shouldBeProcessed)
                     await HandleDetectedTransaction(walletCredentials, tx, balanceChangeTx);
             }
