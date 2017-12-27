@@ -13,6 +13,7 @@ using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Models;
 using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Utils;
 using Lykke.Service.Assets.Client.Custom;
 
 namespace Lykke.Job.TxDetector.Handlers

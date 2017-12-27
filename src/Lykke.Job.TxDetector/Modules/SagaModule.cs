@@ -12,6 +12,7 @@ using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Handlers;
 using Lykke.Job.TxDetector.Projections;
 using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Utils;
 using Lykke.Messaging;
 using Lykke.SettingsReader;
 
@@ -34,14 +35,12 @@ namespace Lykke.Job.TxDetector.Modules
             {
                 ChaosKitty.StateOfChaos = _settings.TxDetectorJob.ChaosKitty.StateOfChaos;
             }
-            var virtualHost = string.Empty; // "/debug";
-
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
 
             var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
                 {
-                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}{virtualHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
+                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
                 }),
                 new RabbitMqTransportFactory());
 
@@ -54,7 +53,7 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailHandler>();
             builder.RegisterType<EventLogProjection>();
 
-            var defaultRetryDelay = (long)TimeSpan.FromSeconds(3).TotalMilliseconds;
+            var defaultRetryDelay = _settings.TxDetectorJob.RetryDelayInMilliseconds;
             builder.Register(ctx =>
             {
                 var projection = ctx.Resolve<EventLogProjection>();

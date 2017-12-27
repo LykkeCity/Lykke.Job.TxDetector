@@ -23,6 +23,7 @@ namespace Lykke.Job.TxDetector.Core
             public int TxDetectorConfirmationsLimit { get; set; }
             public int ProcessInParallelCount { get; set; }
             public string ExchangePrefix { get; set; }
+            public long RetryDelayInMilliseconds { get; set; }
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
         }
@@ -101,11 +102,7 @@ namespace Lykke.Job.TxDetector.Core
 
     public class RabbitMqSettings
     {
-        public string ConnectionString { get; set; }
-
         public string ExternalHost { get; set; }
-
-        public int Port { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
     }

@@ -8,6 +8,7 @@ using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;

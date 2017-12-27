@@ -9,6 +9,7 @@ using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Resources;
+using Lykke.Job.TxDetector.Utils;
 
 namespace Lykke.Job.TxDetector.Sagas
 {

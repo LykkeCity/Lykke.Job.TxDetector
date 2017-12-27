@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Utils;
 
 namespace Lykke.Job.TxDetector.Handlers
 {

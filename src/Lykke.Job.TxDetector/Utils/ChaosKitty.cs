@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Lykke.Job.TxDetector.Sagas
+namespace Lykke.Job.TxDetector.Utils
 {
     public static class ChaosKitty
     {

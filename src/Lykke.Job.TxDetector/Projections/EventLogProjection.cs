@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Sagas;
+using Lykke.Job.TxDetector.Utils;
 
 namespace Lykke.Job.TxDetector.Projections
 {
