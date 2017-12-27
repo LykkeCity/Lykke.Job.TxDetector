@@ -121,7 +121,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
 
                 await _log.WriteInfoAsync(nameof(WalletsScannerFunctions), nameof(HandleWallet),
                     $"ClientId: {balanceChangeTx.ClientId}, tx hash: {balanceChangeTx.Hash}",
-                    "Got transaction; shouldBeProcessed: {shouldBeProcessed}");
+                    $"Got transaction; shouldBeProcessed: {shouldBeProcessed}");
 
                 if (shouldBeProcessed)
                     await HandleDetectedTransaction(walletCredentials, tx, balanceChangeTx);
