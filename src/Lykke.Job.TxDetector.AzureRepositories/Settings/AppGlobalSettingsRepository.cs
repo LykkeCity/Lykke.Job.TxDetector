@@ -17,17 +17,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.Settings
             return "AppSettings";
         }
 
-        public static AppGlobalSettingsEntity Create(IAppGlobalSettings appGlobalSettings)
-        {
-            return new AppGlobalSettingsEntity
-            {
-                PartitionKey = GeneratePartitionKey(),
-                RowKey = GenerateRowKey(),
-                BtcOperationsDisabled = appGlobalSettings.BtcOperationsDisabled,
-                BitcoinBlockchainOperationsDisabled = appGlobalSettings.BitcoinBlockchainOperationsDisabled
-            };
-        }
-
         public bool BtcOperationsDisabled { get; set; }
         public bool BitcoinBlockchainOperationsDisabled { get; set; }
     }

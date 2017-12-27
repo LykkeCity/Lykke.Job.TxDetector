@@ -11,17 +11,8 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
         string[] OperationIds { get; set; }
     }
 
-    public class InternalOperation : IInternalOperation
-    {
-        public Guid TransactionId { get; set; }
-        public string Hash { get; set; }
-        public string CommandType { get; set; }
-        public string[] OperationIds { get; set; }
-    }
-
     public interface IInternalOperationsRepository
     {
-        Task InsertAsync(IInternalOperation operation);
         Task<IInternalOperation> GetAsync(string hash);
     }
 }

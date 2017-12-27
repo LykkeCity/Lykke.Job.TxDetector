@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lykke.Job.TxDetector.Core.Domain.PaymentSystems
@@ -55,6 +54,5 @@ namespace Lykke.Job.TxDetector.Core.Domain.PaymentSystems
     {
 
         Task WriteAsync(IPaymentTransactionLogEvent newEvent);
-        Task<IEnumerable<IPaymentTransactionLogEvent>> GetAsync(string id);
     }
 }

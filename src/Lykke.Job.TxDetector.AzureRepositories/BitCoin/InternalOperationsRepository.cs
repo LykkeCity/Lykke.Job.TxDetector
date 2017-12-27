@@ -14,23 +14,7 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
         {
             return hash;
         }
-
-        public static string GenerateRowKey(Guid transaction)
-        {
-            return transaction.ToString();
-        }
-
-        public static InternalOperationEntity Create(IInternalOperation operation)
-        {
-            return new InternalOperationEntity
-            {
-                RowKey = GenerateRowKey(operation.TransactionId),
-                PartitionKey = GeneratePartitionKey(operation.Hash),
-                CommandType = operation.CommandType,
-                OperationIds = operation.OperationIds
-            };
-        }
-
+        
         public Guid TransactionId => Guid.Parse(RowKey);
         public string Hash => PartitionKey;
         public string CommandType { get; set; }
@@ -50,12 +34,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
         public InternalOperationsRepository(INoSQLTableStorage<InternalOperationEntity> tableStorage)
         {
             _tableStorage = tableStorage;
-        }
-
-        public async Task InsertAsync(IInternalOperation operation)
-        {
-            var entity = InternalOperationEntity.Create(operation);
-            await _tableStorage.InsertAsync(entity);
         }
 
         public async Task<IInternalOperation> GetAsync(string hash)

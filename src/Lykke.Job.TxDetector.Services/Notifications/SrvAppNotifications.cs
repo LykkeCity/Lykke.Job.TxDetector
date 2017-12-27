@@ -38,59 +38,7 @@ namespace Lykke.Job.TxDetector.Services.Notifications
         [JsonProperty("message")]
         public string Message { get; set; }
     }
-
-    public class AssetsCreditedFieldsIos : IosFields
-    {
-        [JsonProperty("amount")]
-        public double Amount { get; set; }
-        [JsonProperty("assetId")]
-        public string AssetId { get; set; }
-    }
-
-    public class AssetsCreditedFieldsAndroid : AndroidPayloadFields
-    {
-        public class BalanceItemModel
-        {
-            [JsonProperty("amount")]
-            public double Amount { get; set; }
-            [JsonProperty("assetId")]
-            public string AssetId { get; set; }
-        }
-
-        [JsonProperty("balanceItem")]
-        public BalanceItemModel BalanceItem { get; set; }
-    }
-
-    public class PushTxDialogFieldsIos : IosFields
-    {
-        [JsonProperty("amount")]
-        public double Amount { get; set; }
-        [JsonProperty("assetId")]
-        public string AssetId { get; set; }
-        [JsonProperty("addressFrom")]
-        public string AddressFrom { get; set; }
-        [JsonProperty("addressTo")]
-        public string AddressTo { get; set; }
-    }
-
-    public class PushTxDialogFieldsAndroid : AndroidPayloadFields
-    {
-        public class PushDialogTxItemModel
-        {
-            [JsonProperty("amount")]
-            public double Amount { get; set; }
-            [JsonProperty("assetId")]
-            public string AssetId { get; set; }
-            [JsonProperty("addressFrom")]
-            public string AddressFrom { get; set; }
-            [JsonProperty("addressTo")]
-            public string AddressTo { get; set; }
-        }
-
-        [JsonProperty("pushTxItem")]
-        public PushDialogTxItemModel PushTxItem { get; set; }
-    }
-
+    
     public class IosNotification : IIosNotification
     {
         [JsonProperty("aps")]
@@ -102,13 +50,7 @@ namespace Lykke.Job.TxDetector.Services.Notifications
         [JsonProperty("data")]
         public AndroidPayloadFields Data { get; set; }
     }
-
-    public class DataNotificationFields : IosFields
-    {
-        [JsonProperty("content-available")]
-        public int ContentAvailable { get; set; } = 1;
-    }
-
+    
     public class SrvAppNotifications : IAppNotifications
     {
         private readonly string _connectionString;
