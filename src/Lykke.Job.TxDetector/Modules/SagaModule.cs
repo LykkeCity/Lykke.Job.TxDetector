@@ -55,7 +55,7 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailHandler>();
             builder.RegisterType<EventLogProjection>();
 
-            var defaultRetryDelay = (long)TimeSpan.FromSeconds(3).TotalMilliseconds;
+            var defaultRetryDelay = _settings.TxDetectorJob.RetryDelayInMilliseconds;
             builder.Register(ctx =>
             {
                 var projection = ctx.Resolve<EventLogProjection>();
