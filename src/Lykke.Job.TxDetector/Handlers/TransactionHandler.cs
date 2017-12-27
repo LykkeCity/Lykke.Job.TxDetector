@@ -12,7 +12,6 @@ using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Models;
-using Lykke.Job.TxDetector.Sagas;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.Service.Assets.Client.Custom;
 
@@ -20,6 +19,8 @@ namespace Lykke.Job.TxDetector.Handlers
 {
     public class TransactionHandler
     {
+        private static readonly TimeSpan RetryTimeoutForTransactionConfirmations = TimeSpan.FromSeconds(10);
+
         private readonly AppSettings.TxDetectorSettings _settings;
         private readonly ISrvBlockchainReader _srvBlockchainReader;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
@@ -54,7 +55,7 @@ namespace Lykke.Job.TxDetector.Handlers
         }
 
         // entry point
-        public async Task Handle(ProcessTransactionCommand command, IEventPublisher eventPublisher)
+        public async Task<CommandHandlingResult> Handle(ProcessTransactionCommand command, IEventPublisher eventPublisher)
         {
             await _log.WriteInfoAsync(nameof(TransactionHandler), nameof(ProcessTransactionCommand), command.ToJson(), "");
 
@@ -62,10 +63,8 @@ namespace Lykke.Job.TxDetector.Handlers
             var isConfirmed = confirmations >= _settings.TxDetectorConfirmationsLimit;
             if (!isConfirmed)
             {
-                throw new Exception();
                 //put back if not confirmed yet
-                //context.MoveMessageToEnd(message);
-                //context.SetCountQueueBasedDelay(500, 100);
+                return new CommandHandlingResult { Retry = true, RetryDelay = (long)RetryTimeoutForTransactionConfirmations.TotalMilliseconds };
             }
 
             ChaosKitty.Meow();
@@ -126,6 +125,7 @@ namespace Lykke.Job.TxDetector.Handlers
                     }
                 }
             }
+            return CommandHandlingResult.Ok();
         }
 
         private async Task<IAsset> GetAssetByBcnIdAsync(string bcnId)
