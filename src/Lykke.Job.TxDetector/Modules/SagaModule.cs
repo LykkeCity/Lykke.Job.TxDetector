@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Autofac;
 using Common.Log;
 using Inceptum.Cqrs.Configuration;
@@ -82,12 +81,12 @@ namespace Lykke.Job.TxDetector.Modules
                             .With("transfer-events")
                         .WithCommandsHandler<TransferHandler>(),
 
-                    Register.BoundedContext("cachein")
+                    Register.BoundedContext("cashin")
                         .FailedCommandRetryDelay(defaultRetryDelay)
-                        .ListeningCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
-                            .On("cachein-commands")
+                        .ListeningCommands(typeof(RegisterCashInOutCommand), typeof(ProcessCashInCommand))
+                            .On("cashin-commands")
                         .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
-                            .With("cachein-events")
+                            .With("cashin-events")
                         .WithCommandsHandler<CashInHandler>(),
 
                     Register.BoundedContext("notifications")
@@ -111,11 +110,11 @@ namespace Lykke.Job.TxDetector.Modules
                         .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
                             .From("transactions").On("transactions-events")
                         .ListeningEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
-                            .From("cachein").On("cachein-events")
+                            .From("cashin").On("cashin-events")
                         .PublishingCommands(typeof(ProcessTransferCommand))
                             .To("transfer").With("transfer-commands")
-                        .PublishingCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
-                            .To("cachein").With("cachein-commands")
+                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(ProcessCashInCommand))
+                            .To("cashin").With("cashin-commands")
                         .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
                             .To("email").With("email-commands")
                         .PublishingCommands(typeof(SendNotificationCommand))
@@ -126,8 +125,8 @@ namespace Lykke.Job.TxDetector.Modules
                             .To("transactions").With("transactions-commands")
                         .PublishingCommands(typeof(ProcessTransferCommand))
                             .To("transfer").With("transfer-commands")
-                        .PublishingCommands(typeof(RegisterCachInOutCommand), typeof(ProcessCashInCommand))
-                            .To("cachein").With("cachein-commands")
+                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(ProcessCashInCommand))
+                            .To("cashin").With("cashin-commands")
                         .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
                             .To("email").With("email-commands")
                         .PublishingCommands(typeof(SendNotificationCommand))

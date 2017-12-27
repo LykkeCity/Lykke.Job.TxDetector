@@ -21,12 +21,12 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="3.0.2" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.20" />
-    <PackageReference Include="Lykke.Cqrs" Version="0.1.7-beta" />
+    <PackageReference Include="Lykke.Cqrs" Version="0.1.12" />
     <PackageReference Include="Lykke.JobTriggers" Version="1.2.0" />
     <PackageReference Include="Lykke.Logs" Version="3.4.1" />
     <PackageReference Include="Lykke.MatchingEngineConnector" Version="1.0.34" />
-    <PackageReference Include="Lykke.Messaging" Version="0.1.12-beta" />
-    <PackageReference Include="Lykke.Messaging.RabbitMq" Version="0.1.12-beta" />
+    <PackageReference Include="Lykke.Messaging" Version="0.1.14" />
+    <PackageReference Include="Lykke.Messaging.RabbitMq" Version="0.1.14" />
     <PackageReference Include="Lykke.Service.Assets.Client" Version="1.0.17" />
     <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.85" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.43" />

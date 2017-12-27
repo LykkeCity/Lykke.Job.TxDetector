@@ -7,7 +7,6 @@ using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Events;
-using Lykke.Job.TxDetector.Sagas;
 using Lykke.Job.TxDetector.Utils;
 
 namespace Lykke.Job.TxDetector.Handlers
@@ -30,9 +29,6 @@ namespace Lykke.Job.TxDetector.Handlers
             await _log.WriteInfoAsync(nameof(TransferHandler), nameof(ProcessTransferCommand), command.ToJson(), "");
 
             ChaosKitty.Meow();
-
-            //not need for offchain
-            //await _transferEventsRepository.SetIsSettledIfExistsAsync(clientId, transferId, false);
 
             if (await _paymentTransactionsRepository.SetStatus(command.TransferId, PaymentStatus.NotifyProcessed) != null)
             {

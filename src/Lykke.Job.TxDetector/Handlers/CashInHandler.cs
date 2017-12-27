@@ -7,12 +7,12 @@ using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Events;
-using Lykke.Job.TxDetector.Sagas;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
+using Microsoft.Rest;
 
 namespace Lykke.Job.TxDetector.Handlers
 {
@@ -24,17 +24,17 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public CashInHandler(
             [NotNull] ILog log,
-            IMatchingEngineClient matchingEngineClient,
-            ICashOperationsRepositoryClient cashOperationsRepositoryClient)
+            [NotNull] IMatchingEngineClient matchingEngineClient,
+            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
-            _matchingEngineClient = matchingEngineClient;
-            _cashOperationsRepositoryClient = cashOperationsRepositoryClient;
+            _matchingEngineClient = matchingEngineClient ?? throw new ArgumentNullException(nameof(matchingEngineClient));
+            _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
         }
 
-        public async Task Handle(RegisterCachInOutCommand command, IEventPublisher eventPublisher)
+        public async Task Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
+            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterCashInOutCommand), command.ToJson(), "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -42,18 +42,28 @@ namespace Lykke.Job.TxDetector.Handlers
 
             ChaosKitty.Meow();
 
-            await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
+            try
             {
-                Id = id,
-                ClientId = transaction.ClientId,
-                Multisig = transaction.Multisig,
-                AssetId = asset.Id,
-                Amount = amount,
-                BlockChainHash = transaction.Hash,
-                DateTime = DateTime.UtcNow,
-                AddressTo = transaction.Multisig,
-                State = TransactionStates.SettledOnchain
-            });
+                await _cashOperationsRepositoryClient.RegisterAsync(new CashInOutOperation
+                {
+                    Id = id,
+                    ClientId = transaction.ClientId,
+                    Multisig = transaction.Multisig,
+                    AssetId = asset.Id,
+                    Amount = amount,
+                    BlockChainHash = transaction.Hash,
+                    DateTime = DateTime.UtcNow,
+                    AddressTo = transaction.Multisig,
+                    State = TransactionStates.SettledOnchain
+                });
+            }
+            catch (HttpOperationException)
+            {
+                var persistedOperation = await _cashOperationsRepositoryClient.GetAsync(transaction.ClientId, id);
+                if (persistedOperation == null)
+                    throw;
+                // else assuming that operation was correctly persisted before
+            }
 
             eventPublisher.PublishEvent(new CashInOutOperationRegisteredEvent
             {
