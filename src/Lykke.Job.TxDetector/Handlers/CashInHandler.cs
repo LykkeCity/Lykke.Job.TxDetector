@@ -82,9 +82,10 @@ namespace Lykke.Job.TxDetector.Handlers
                     throw new ProcessingException(responseModel.ToJson());
                 }
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
                 // assuming that ArgumentException is an exception than should be converted into MeStatusCodes.Duplicate
+                await _log.WriteWarningAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), $"ArgumentException from ME. Treating this as a MeStatusCodes.Duplicate: {ex.Message}");
             }
 
             ChaosKitty.Meow();
