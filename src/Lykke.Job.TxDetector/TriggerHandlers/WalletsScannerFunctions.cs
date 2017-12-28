@@ -51,7 +51,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             _cqrsEngine = cqrsEngine;
         }
 
-        [TimerTrigger("00:02:00")]
+        [TimerTrigger("00:00:05")]
         public async Task ScanClients()
         {
             if ((await _appGlobalSettingsRepositry.GetAsync()).BitcoinBlockchainOperationsDisabled)
@@ -69,7 +69,10 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             try
             {
                 _currentBlockHeight = await _srvBlockchainReader.GetCurrentBlockHeight();
-                await _walletCredentialsRepository.ScanAllAsync(HandleWallets);
+                //await _walletCredentialsRepository.ScanAllAsync(HandleWallets);
+                var clientId = "2356a673-af63-4f60-96d8-c5ecb6591b48";
+                var credentials = await _walletCredentialsRepository.GetAsync(clientId);
+                await HandleWallet(credentials);
             }
             catch (Exception exc) when (exc is TaskCanceledException || exc is WebException)
             {
@@ -102,6 +105,8 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
 
         private async Task HandleWallet(IWalletCredentials walletCredentials)
         {
+            Console.WriteLine($"Processing client {walletCredentials.ClientId}");
+
             var lastProcessedBlockHeight =
                 await _lastProcessedBlockRepository.GetLastProcessedBlockHeightAsync(walletCredentials.ClientId);
 

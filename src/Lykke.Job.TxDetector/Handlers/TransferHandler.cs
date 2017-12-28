@@ -24,7 +24,7 @@ namespace Lykke.Job.TxDetector.Handlers
             _paymentTransactionsRepository = paymentTransactionsRepository ?? throw new ArgumentNullException(nameof(paymentTransactionsRepository));
         }
 
-        public async Task Handle(ProcessTransferCommand command, IEventPublisher eventPublisher)
+        public async Task<CommandHandlingResult> Handle(ProcessTransferCommand command, IEventPublisher eventPublisher)
         {
             await _log.WriteInfoAsync(nameof(TransferHandler), nameof(ProcessTransferCommand), command.ToJson(), "");
 
@@ -34,6 +34,8 @@ namespace Lykke.Job.TxDetector.Handlers
             {
                 eventPublisher.PublishEvent(new TransferProcessedEvent { TransferId = command.TransferId });
             }
+
+            return CommandHandlingResult.Ok();
         }
     }
 }

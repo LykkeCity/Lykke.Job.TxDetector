@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator.MessagesData;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
@@ -23,7 +24,7 @@ namespace Lykke.Job.TxDetector.Handlers
             _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
         }
 
-        public async Task Handle(SendNoRefundDepositDoneMailCommand command)
+        public async Task<CommandHandlingResult> Handle(SendNoRefundDepositDoneMailCommand command)
         {
             await _log.WriteInfoAsync(nameof(EmailHandler), nameof(SendNoRefundDepositDoneMailCommand), command.ToJson(), "");
 
@@ -35,6 +36,8 @@ namespace Lykke.Job.TxDetector.Handlers
                 AssetBcnId = command.AssetId
             };
             await _emailSender.SendEmailAsync(command.Email, content);
+
+            return CommandHandlingResult.Ok();
         }
     }
 }
