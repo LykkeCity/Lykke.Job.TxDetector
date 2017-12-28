@@ -6,6 +6,7 @@ using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Models;
 using Lykke.Job.TxDetector.Modules;
@@ -129,6 +130,8 @@ namespace Lykke.Job.TxDetector
         {
             try
             {
+                var cqrs = ApplicationContainer.Resolve<ICqrsEngine>(); // bootstrap
+
                 _triggerHost = new TriggerHost(new AutofacServiceProvider(ApplicationContainer));
                 _triggerHostTask = _triggerHost.Start();
 

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Utils;
@@ -22,13 +23,15 @@ namespace Lykke.Job.TxDetector.Handlers
             _appNotifications = appNotifications ?? throw new ArgumentNullException(nameof(appNotifications));
         }
 
-        public async Task Handle(SendNotificationCommand command)
+        public async Task<CommandHandlingResult> Handle(SendNotificationCommand command)
         {
             await _log.WriteInfoAsync(nameof(NotificationsHandler), nameof(SendNotificationCommand), command.ToJson(), "");
 
             ChaosKitty.Meow();
 
             await _appNotifications.SendTextNotificationAsync(new [] {command.NotificationId}, command.Type, command.Message);
+
+            return CommandHandlingResult.Ok();
         }
     }
 }

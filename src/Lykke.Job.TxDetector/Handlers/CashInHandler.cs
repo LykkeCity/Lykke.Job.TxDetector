@@ -32,7 +32,7 @@ namespace Lykke.Job.TxDetector.Handlers
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
         }
 
-        public async Task Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
+        public async Task<CommandHandlingResult> Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
         {
             await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterCashInOutCommand), command.ToJson(), "");
             var id = command.CommandId;
@@ -72,9 +72,11 @@ namespace Lykke.Job.TxDetector.Handlers
                 Amount = command.Amount,
                 Transaction = command.Transaction
             });
+
+            return CommandHandlingResult.Ok();
         }
 
-        public async Task Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
+        public async Task<CommandHandlingResult> Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
         {
             await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
             var id = command.CommandId;
@@ -102,6 +104,8 @@ namespace Lykke.Job.TxDetector.Handlers
             ChaosKitty.Meow();
 
             eventPublisher.PublishEvent(new TransactionProcessedEvent { ClientId = command.Transaction.ClientId, Asset = command.Asset, Amount = command.Amount });
+
+            return CommandHandlingResult.Ok();
         }
     }
 }
