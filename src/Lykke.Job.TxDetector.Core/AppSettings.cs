@@ -25,6 +25,7 @@ namespace Lykke.Job.TxDetector.Core
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
             public RabbitMqSettings RabbitMq { get; set; }
+            public string Environment { get; set; }
         }
 
         public class ChaosSettings
@@ -98,6 +99,5 @@ namespace Lykke.Job.TxDetector.Core
         public string Host { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public string ExchangePrefix { get; set; }
     }
 }

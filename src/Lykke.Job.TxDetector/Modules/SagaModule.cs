@@ -64,7 +64,7 @@ namespace Lykke.Job.TxDetector.Modules
                     messagingEngine,
                     new DefaultEndpointProvider(),
                     true,
-                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: rabbitMqSettings.ExchangePrefix)),
+                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.Environment)),
 
                     Register.BoundedContext("transactions")
                         .FailedCommandRetryDelay(defaultRetryDelay)
