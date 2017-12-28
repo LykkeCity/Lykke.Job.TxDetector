@@ -36,10 +36,11 @@ namespace Lykke.Job.TxDetector.Modules
             }
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
 
+            var rabbitMqSettings = _settings.TxDetectorJob.RabbitMq;
             var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
                 {
-                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
+                    {"RabbitMq", new TransportInfo($"amqp://{rabbitMqSettings.Host}", rabbitMqSettings.Username, rabbitMqSettings.Password, "None", "RabbitMq")}
                 }),
                 new RabbitMqTransportFactory());
 
@@ -63,7 +64,7 @@ namespace Lykke.Job.TxDetector.Modules
                     messagingEngine,
                     new DefaultEndpointProvider(),
                     true,
-                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.ExchangePrefix)),
+                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.Environment)),
 
                     Register.BoundedContext("transactions")
                         .FailedCommandRetryDelay(defaultRetryDelay)
