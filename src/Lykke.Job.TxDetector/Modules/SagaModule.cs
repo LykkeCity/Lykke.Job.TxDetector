@@ -36,10 +36,11 @@ namespace Lykke.Job.TxDetector.Modules
             }
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
 
+            var rabbitMqSettings = _settings.TxDetectorJob.RabbitMq;
             var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
                 {
-                    {"RabbitMq", new TransportInfo($"amqp://{_settings.RabbitMq.ExternalHost}", _settings.RabbitMq.Username, _settings.RabbitMq.Password, "None", "RabbitMq")}
+                    {"RabbitMq", new TransportInfo($"amqp://{rabbitMqSettings.Host}", rabbitMqSettings.Username, rabbitMqSettings.Password, "None", "RabbitMq")}
                 }),
                 new RabbitMqTransportFactory());
 
@@ -63,7 +64,7 @@ namespace Lykke.Job.TxDetector.Modules
                     messagingEngine,
                     new DefaultEndpointProvider(),
                     true,
-                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.ExchangePrefix)),
+                    Register.DefaultEndpointResolver(new RabbitMqConventionEndpointResolver("RabbitMq", "protobuf", environment: _settings.TxDetectorJob.Environment)),
 
                     Register.BoundedContext("transactions")
                         .FailedCommandRetryDelay(defaultRetryDelay)
@@ -83,9 +84,9 @@ namespace Lykke.Job.TxDetector.Modules
 
                     Register.BoundedContext("cashin")
                         .FailedCommandRetryDelay(defaultRetryDelay)
-                        .ListeningCommands(typeof(RegisterCashInOutCommand), typeof(ProcessCashInCommand))
+                        .ListeningCommands(typeof(RegisterCashInOutCommand), typeof(RegisterBitcoinCashInCommand), typeof(ProcessCashInCommand))
                             .On("cashin-commands")
-                        .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
+                        .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(BitcoinCashInRegisteredEvent), typeof(TransactionProcessedEvent))
                             .With("cashin-events")
                         .WithCommandsHandler<CashInHandler>(),
 
@@ -109,11 +110,11 @@ namespace Lykke.Job.TxDetector.Modules
                     Register.Saga<ConfirmationsSaga>("transactions-saga")
                         .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
                             .From("transactions").On("transactions-events")
-                        .ListeningEvents(typeof(CashInOutOperationRegisteredEvent), typeof(TransactionProcessedEvent))
+                        .ListeningEvents(typeof(CashInOutOperationRegisteredEvent), typeof(BitcoinCashInRegisteredEvent), typeof(TransactionProcessedEvent))
                             .From("cashin").On("cashin-events")
                         .PublishingCommands(typeof(ProcessTransferCommand))
                             .To("transfer").With("transfer-commands")
-                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(ProcessCashInCommand))
+                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(RegisterBitcoinCashInCommand), typeof(ProcessCashInCommand))
                             .To("cashin").With("cashin-commands")
                         .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
                             .To("email").With("email-commands")
@@ -125,7 +126,7 @@ namespace Lykke.Job.TxDetector.Modules
                             .To("transactions").With("transactions-commands")
                         .PublishingCommands(typeof(ProcessTransferCommand))
                             .To("transfer").With("transfer-commands")
-                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(ProcessCashInCommand))
+                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(RegisterBitcoinCashInCommand), typeof(ProcessCashInCommand))
                             .To("cashin").With("cashin-commands")
                         .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
                             .To("email").With("email-commands")

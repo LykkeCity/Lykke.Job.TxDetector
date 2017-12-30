@@ -11,7 +11,6 @@ namespace Lykke.Job.TxDetector.Core
         public SlackNotificationsSettings SlackNotifications { get; set; }
         public AssetsSettings Assets { get; set; }
         public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
-        public RabbitMqSettings RabbitMq { get; set; }
 
         public class TxDetectorSettings
         {
@@ -22,10 +21,11 @@ namespace Lykke.Job.TxDetector.Core
             public NotificationsSettings Notifications { get; set; }
             public int TxDetectorConfirmationsLimit { get; set; }
             public int ProcessInParallelCount { get; set; }
-            public string ExchangePrefix { get; set; }
             public long RetryDelayInMilliseconds { get; set; }
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
+            public RabbitMqSettings RabbitMq { get; set; }
+            public string Environment { get; set; }
         }
 
         public class ChaosSettings
@@ -102,7 +102,7 @@ namespace Lykke.Job.TxDetector.Core
 
     public class RabbitMqSettings
     {
-        public string ExternalHost { get; set; }
+        public string Host { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
     }

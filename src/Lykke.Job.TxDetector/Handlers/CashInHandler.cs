@@ -6,6 +6,7 @@ using Inceptum.Messaging;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
+using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
@@ -21,12 +22,14 @@ namespace Lykke.Job.TxDetector.Handlers
         [NotNull] private readonly ILog _log;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
+        private readonly IBitcoinCashinRepository _bitcoinCashinRepository;
 
         public CashInHandler(
             [NotNull] ILog log,
             [NotNull] IMatchingEngineClient matchingEngineClient,
-            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient)
+            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient, IBitcoinCashinRepository bitcoinCashinRepository)
         {
+            _bitcoinCashinRepository = bitcoinCashinRepository;
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _matchingEngineClient = matchingEngineClient ?? throw new ArgumentNullException(nameof(matchingEngineClient));
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
@@ -66,6 +69,27 @@ namespace Lykke.Job.TxDetector.Handlers
             }
 
             eventPublisher.PublishEvent(new CashInOutOperationRegisteredEvent
+            {
+                CommandId = command.CommandId,
+                Asset = command.Asset,
+                Amount = command.Amount,
+                Transaction = command.Transaction
+            });
+
+            return CommandHandlingResult.Ok();
+        }
+
+        public async Task<CommandHandlingResult> Handle(RegisterBitcoinCashInCommand command, IEventPublisher eventPublisher)
+        {
+            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterBitcoinCashInCommand), command.ToJson(), "");
+            var id = command.CommandId;
+            var transaction = command.Transaction;
+
+            ChaosKitty.Meow();
+
+            await _bitcoinCashinRepository.InsertOrReplaceAsync(id, transaction.ClientId, transaction.Multisig, transaction.Hash, transaction.IsSegwit);
+
+            eventPublisher.PublishEvent(new BitcoinCashInRegisteredEvent
             {
                 CommandId = command.CommandId,
                 Asset = command.Asset,

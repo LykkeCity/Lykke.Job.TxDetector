@@ -108,6 +108,11 @@ namespace Lykke.Job.TxDetector.Modules
                     AzureTableStorage<ConfirmedTransactionRecord>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "ConfirmedTransactions", _log)));
 
+            builder.RegisterInstance<IBitcoinCashinRepository>(
+                new BitcoinCashinRepository(
+                    AzureTableStorage<BitcoinCashinEntity>.Create(
+                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.BitCoinQueueConnectionString), "BitcoinCashin", _log)));
+
             builder.RegisterInstance<IBalanceChangeTransactionsRepository>(
                 new BalanceChangeTransactionsRepository(
                     AzureTableStorage<BalanceChangeTransactionEntity>.Create(
@@ -127,6 +132,11 @@ namespace Lykke.Job.TxDetector.Modules
                 new WalletCredentialsRepository(
                     AzureTableStorage<WalletCredentialsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "WalletCredentials", _log)));
+
+            builder.RegisterInstance<IBcnClientCredentialsRepository>(
+                new BcnClientCredentialsRepository(
+                    AzureTableStorage<BcnCredentialsRecordEntity>.Create(_settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString),
+                        "BcnClientCredentials", _log)));
 
             builder.RegisterInstance<IAppGlobalSettingsRepositry>(
                 new AppGlobalSettingsRepository(

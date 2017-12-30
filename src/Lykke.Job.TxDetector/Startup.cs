@@ -87,8 +87,6 @@ namespace Lykke.Job.TxDetector
 
                 ApplicationContainer = builder.Build();
 
-                var cqrs = ApplicationContainer.Resolve<ICqrsEngine>(); // bootstrap
-
                 return new AutofacServiceProvider(ApplicationContainer);
             }
             catch (Exception ex)
@@ -133,6 +131,8 @@ namespace Lykke.Job.TxDetector
         {
             try
             {
+                var cqrs = ApplicationContainer.Resolve<ICqrsEngine>(); // bootstrap
+
                 _triggerHost = new TriggerHost(new AutofacServiceProvider(ApplicationContainer));
                 _triggerHostTask = _triggerHost.Start();
 
