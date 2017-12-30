@@ -9,12 +9,13 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
     {
         string ClientId { get; set; }
         string Multisig { get; set; }
+        bool IsSegwit { get; set; }
         DateTime DetectDt { get; }
     }
 
     public class BalanceChangeTransaction : IBalanceChangeTransaction
     {
-        public static IBalanceChangeTransaction Create(IBlockchainTransaction blockchainTx, string clientId, string multisig)
+        public static IBalanceChangeTransaction Create(IBlockchainTransaction blockchainTx, string clientId, string multisig, bool isSegwit)
         {
             return new BalanceChangeTransaction
             {
@@ -26,7 +27,8 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
                 Multisig = multisig,
                 BlockId = blockchainTx.BlockId,
                 Height = blockchainTx.Height,
-                DetectDt = DateTime.UtcNow
+                DetectDt = DateTime.UtcNow,
+                IsSegwit = isSegwit
             };
         }
 
@@ -38,6 +40,7 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
         public int Height { get; set; }
         public string ClientId { get; set; }
         public string Multisig { get; set; }
+        public bool IsSegwit { get; set; }
         public DateTime DetectDt { get; set; }
     }
 

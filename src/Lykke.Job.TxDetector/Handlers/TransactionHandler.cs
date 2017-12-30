@@ -117,7 +117,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
                             eventPublisher.PublishEvent(new CashInOperationCreatedEvent
                             {
-                                Transaction = new Transaction { Hash = tx.Hash, ClientId = tx.ClientId, Multisig = tx.Multisig },
+                                Transaction = new Transaction { Hash = tx.Hash, ClientId = tx.ClientId, Multisig = tx.Multisig, IsSegwit = tx.IsSegwit },
                                 Asset = new Asset { Id = asset.Id, Accuracy = asset.Accuracy },
                                 Amount = sum
                             });

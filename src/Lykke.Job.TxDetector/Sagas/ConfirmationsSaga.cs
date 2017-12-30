@@ -52,6 +52,23 @@ namespace Lykke.Job.TxDetector.Sagas
 
             ChaosKitty.Meow();
 
+            var cmd = new RegisterBitcoinCashInCommand
+            {
+                Transaction = evt.Transaction,
+                Asset = evt.Asset,
+                Amount = evt.Amount,
+                CommandId = evt.CommandId
+            };
+
+            sender.SendCommand(cmd, "cashin");
+        }
+
+        private async Task Handle(BitcoinCashInRegisteredEvent evt, ICommandSender sender)
+        {
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(BitcoinCashInRegisteredEvent), evt.ToJson());
+
+            ChaosKitty.Meow();
+
             var cmd = new ProcessCashInCommand
             {
                 Transaction = evt.Transaction,

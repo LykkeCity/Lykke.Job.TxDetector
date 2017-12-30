@@ -35,7 +35,8 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
                 SpentCoins = balanceChangeTransaction.SpentCoins,
                 BlockId = balanceChangeTransaction.BlockId,
                 Height = balanceChangeTransaction.Height,
-                DetectDt = balanceChangeTransaction.DetectDt
+                DetectDt = balanceChangeTransaction.DetectDt,
+                IsSegwit = balanceChangeTransaction.IsSegwit
             };
         }
 
@@ -43,6 +44,7 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
         public int Confirmations { get; set; }
         public string ClientId { get; set; }
         public string Multisig { get; set; }
+        public bool IsSegwit { get; set; }
         public DateTime DetectDt { get; set; }
 
         public InputOutput[] ReceivedCoins
