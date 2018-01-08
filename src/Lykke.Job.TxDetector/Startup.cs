@@ -68,7 +68,7 @@ namespace Lykke.Job.TxDetector
                 Log = CreateLogWithSlack(services, appSettings);
 
                 builder.RegisterModule(new JobModule(appSettings, Log));
-                builder.RegisterModule(new SagaModule(appSettings, Log));
+                builder.RegisterModule(new CqrsModule(appSettings, Log));
 
                 var bitCoinQueueConnectionString = appSettings.ConnectionString(x => x.TxDetectorJob.Db.BitCoinQueueConnectionString);
                 if (string.IsNullOrWhiteSpace(bitCoinQueueConnectionString.CurrentValue))
