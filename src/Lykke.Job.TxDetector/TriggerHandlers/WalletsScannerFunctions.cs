@@ -113,7 +113,7 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             var bcnCredentials = await _bcnClientCredentialsRepository.GetAsync(walletCredentials.ClientId, LykkeConstants.BitcoinAssetId);
 
             if (bcnCredentials != null)
-                await ProcessNewTransactions(walletCredentials.ClientId, bcnCredentials.Address, lastProcessedBlockHeight, true);
+                await ProcessNewTransactions(walletCredentials.ClientId, bcnCredentials.AssetAddress, lastProcessedBlockHeight, true);
 
 
             try
