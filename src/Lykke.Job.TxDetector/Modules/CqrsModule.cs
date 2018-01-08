@@ -17,12 +17,12 @@ using Lykke.SettingsReader;
 
 namespace Lykke.Job.TxDetector.Modules
 {
-    public class SagaModule : Module
+    public class CqrsModule : Module
     {
         private readonly AppSettings _settings;
         private readonly ILog _log;
 
-        public SagaModule(IReloadingManager<AppSettings> settingsManager, ILog log)
+        public CqrsModule(IReloadingManager<AppSettings> settingsManager, ILog log)
         {
             _settings = settingsManager.CurrentValue;
             _log = log;
@@ -36,11 +36,11 @@ namespace Lykke.Job.TxDetector.Modules
             }
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>().SingleInstance();
 
-            var rabbitMqSettings = _settings.TxDetectorJob.RabbitMq;
+            var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory { Uri = _settings.TxDetectorJob.RabbitMQConnectionString };
             var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
                 {
-                    {"RabbitMq", new TransportInfo($"amqp://{rabbitMqSettings.Host}", rabbitMqSettings.Username, rabbitMqSettings.Password, "None", "RabbitMq")}
+                    {"RabbitMq", new TransportInfo(rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName, rabbitMqSettings.Password, "None", "RabbitMq")}
                 }),
                 new RabbitMqTransportFactory());
 
