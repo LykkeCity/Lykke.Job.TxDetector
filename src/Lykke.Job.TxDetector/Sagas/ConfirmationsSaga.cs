@@ -31,7 +31,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(CashInOperationCreatedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOperationCreatedEvent), evt.ToJson());
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOperationCreatedEvent), evt.ToJson(), "");
 
             ChaosKitty.Meow();
 
@@ -48,7 +48,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOutOperationRegisteredEvent), evt.ToJson());
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOutOperationRegisteredEvent), evt.ToJson(), "");
 
             ChaosKitty.Meow();
 
@@ -65,7 +65,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(TransferOperationCreatedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransferOperationCreatedEvent), evt.ToJson());
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransferOperationCreatedEvent), evt.ToJson(), "");
 
             ChaosKitty.Meow();
 
@@ -79,7 +79,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(TransactionProcessedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransactionProcessedEvent), evt.ToJson());
+            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransactionProcessedEvent), evt.ToJson(), "");
 
             ChaosKitty.Meow();
 
