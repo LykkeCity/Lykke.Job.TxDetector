@@ -86,19 +86,11 @@ namespace Lykke.Job.TxDetector.Handlers
 
             ChaosKitty.Meow();
 
-            try
+            var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
+            if (responseModel.Status != MeStatusCodes.Ok && responseModel.Status != MeStatusCodes.AlreadyProcessed && responseModel.Status != MeStatusCodes.Duplicate)
             {
-                var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
-                if (responseModel.Status != MeStatusCodes.Ok && responseModel.Status != MeStatusCodes.AlreadyProcessed && responseModel.Status != MeStatusCodes.Duplicate)
-                {
-                    await _log.WriteWarningAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), responseModel.ToJson());
-                    throw new ProcessingException(responseModel.ToJson());
-                }
-            }
-            catch (ArgumentException ex)
-            {
-                // assuming that ArgumentException is an exception than should be converted into MeStatusCodes.Duplicate
-                await _log.WriteWarningAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), $"ArgumentException from ME. Treating this as a MeStatusCodes.Duplicate: {ex.Message}");
+                await _log.WriteWarningAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), responseModel.ToJson());
+                throw new ProcessingException(responseModel.ToJson());
             }
 
             ChaosKitty.Meow();
