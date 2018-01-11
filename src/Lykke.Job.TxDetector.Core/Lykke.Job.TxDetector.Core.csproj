@@ -9,7 +9,7 @@
     <PackageReference Include="Lykke.Common" Version="4.1.0" />
     <PackageReference Include="Lykke.Service.Assets.Client" Version="1.0.17" />
     <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.85" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.1.2" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.1.4" />
   </ItemGroup>
 
 </Project>
