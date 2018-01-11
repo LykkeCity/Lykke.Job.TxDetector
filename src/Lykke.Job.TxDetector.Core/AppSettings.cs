@@ -24,7 +24,7 @@ namespace Lykke.Job.TxDetector.Core
             public long RetryDelayInMilliseconds { get; set; }
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
-            public RabbitMqSettings RabbitMq { get; set; }
+            public string RabbitMQConnectionString { get; set; }
             public string Environment { get; set; }
         }
 
@@ -92,12 +92,5 @@ namespace Lykke.Job.TxDetector.Core
 
             public string QueueName { get; set; }
         }
-    }
-
-    public class RabbitMqSettings
-    {
-        public string Host { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
     }
 }
