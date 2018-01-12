@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="CashInSuccessText" xml:space="preserve">
-    <value>A deposit of {0} {1} has been completed to your multisignature trading wallet with 3 confirmations received.</value>
+    <value>A deposit of {0} {1} has been completed to your trading wallet with 3 confirmations received.</value>
   </data>
   <data name="CreditedPushText" xml:space="preserve">
     <value>Credited {0} {1}</value>
