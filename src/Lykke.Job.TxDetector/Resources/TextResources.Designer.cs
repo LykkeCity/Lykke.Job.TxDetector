@@ -10,7 +10,6 @@
 
 namespace Lykke.Job.TxDetector.Resources {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -20,7 +19,7 @@ namespace Lykke.Job.TxDetector.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TextResources {
@@ -40,7 +39,7 @@ namespace Lykke.Job.TxDetector.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Lykke.Job.TxDetector.Resources.TextResources", typeof(TextResources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Lykke.Job.TxDetector.Resources.TextResources", typeof(TextResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -62,7 +61,7 @@ namespace Lykke.Job.TxDetector.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A deposit of {0} {1} has been completed to your multisignature trading wallet with 3 confirmations received..
+        ///   Looks up a localized string similar to A deposit of {0} {1} has been completed to your trading wallet with 3 confirmations received..
         /// </summary>
         internal static string CashInSuccessText {
             get {

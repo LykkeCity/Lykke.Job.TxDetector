@@ -119,7 +119,7 @@ namespace Lykke.Job.TxDetector.Sagas
                 {
                     NotificationId = clientAcc.NotificationsId,
                     Type = NotificationType.TransactionConfirmed,
-                    Message = string.Format(TextResources.CashInSuccessText, evt.Amount.GetFixedAsString(evt.Asset.Accuracy), evt.Asset.Id)
+                    Message = string.Format(TextResources.CashInSuccessText, new decimal(evt.Amount).TruncateDecimalPlaces(evt.Asset.Accuracy), evt.Asset.Id)
                 };
                 sender.SendCommand(sendNotificationCommand, "notifications");
             }
