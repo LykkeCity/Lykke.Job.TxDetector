@@ -41,6 +41,8 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
         Task<IWalletCredentials> GetAsync(string clientId);
 
         Task ScanAllAsync(Func<IEnumerable<IWalletCredentials>, Task> chunk);
+
+        Task<IEnumerable<IWalletCredentials>> GetAllAsync();
     }
 
 }

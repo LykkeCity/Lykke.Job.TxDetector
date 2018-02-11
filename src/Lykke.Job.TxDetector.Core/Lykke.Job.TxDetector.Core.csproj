@@ -10,6 +10,7 @@
     <PackageReference Include="Lykke.Service.Assets.Client" Version="1.0.17" />
     <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.85" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.1.4" />
+    <PackageReference Include="QBitNinja.Client" Version="1.0.3.46" />
   </ItemGroup>
 
 </Project>

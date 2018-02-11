@@ -2,6 +2,7 @@
 using System.Net;
 using Lykke.Service.OperationsRepository.Client;
 using Lykke.SettingsReader.Attributes;
+using NBitcoin;
 
 namespace Lykke.Job.TxDetector.Core
 {
@@ -49,6 +50,8 @@ namespace Lykke.Job.TxDetector.Core
         public class NinjaSettings
         {
             public bool IsMainNet { get; set; }
+
+            [HttpCheck("/")]
             public string Url { get; set; }
         }
 
@@ -97,6 +100,14 @@ namespace Lykke.Job.TxDetector.Core
         {
             public string ServiceUrl { get; set; }
             public int RequestTimeout { get; set; }
+        }
+    }
+
+    public static class NinjaSettingsExtensions
+    {
+        public static Network GetNetwork(this AppSettings.NinjaSettings settings)
+        {
+            return settings.IsMainNet ? Network.Main : Network.TestNet;
         }
     }
 }

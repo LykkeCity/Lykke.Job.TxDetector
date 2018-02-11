@@ -31,15 +31,6 @@ namespace Lykke.Job.TxDetector.Core.Services.BitCoin
         public int Height { get; set; }
     }
 
-    public interface ISrvBlockchainReader
-    {
-        Task<IEnumerable<IBlockchainTransaction>> GetBalanceChangesByAddressAsync(string address, int? until = null);
-
-        Task<int?> GetConfirmationsCount(string hash);
-
-        Task<int> GetCurrentBlockHeight();
-    }
-
     public static class SrvBlockchainReaderExt
     {
         public static bool IsCashIn(this IBlockchainTransaction tx, string address)
