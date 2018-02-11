@@ -31,6 +31,8 @@ using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client.Custom;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
+using NBitcoin;
+using QBitNinja.Client;
 
 namespace Lykke.Job.TxDetector.Modules
 {
@@ -83,14 +85,28 @@ namespace Lykke.Job.TxDetector.Modules
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
             BindServices(builder);
+            BindNinja(builder);
 
             builder.Populate(_services);
         }
 
+        private static void BindNinja(ContainerBuilder builder)
+        {
+            builder.Register<Func<QBitNinjaClient>>(x =>
+            {
+                var resolver = x.Resolve<IComponentContext>();
+                return () =>
+                {
+                    var settings = resolver.Resolve<AppSettings.NinjaSettings>();
+                    return new QBitNinjaClient(settings.Url, settings.GetNetwork());
+                };
+            });
+
+            builder.RegisterType<QBitNinjaApiCaller>().As<IQBitNinjaApiCaller>();
+        }
+
         private void BindServices(ContainerBuilder builder)
         {
-            builder.RegisterType<SrvNinjaBlockChainReader>().As<ISrvBlockchainReader>().SingleInstance();
-
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));

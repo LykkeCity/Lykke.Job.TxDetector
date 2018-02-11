@@ -45,5 +45,6 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
         Task<IBcnCredentialsRecord> GetByAssetAddressAsync(string assetAddress);
         Task<IEnumerable<IBcnCredentialsRecord>> GetAsync(string clientId);
         Task<string> GetClientAddress(string clientId);
+        Task<IEnumerable<IBcnCredentialsRecord>> GetAllAsync(string assetId);
     }
 }

@@ -2,50 +2,36 @@ using System.Linq;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using QBitNinja.Client.Models;
 
 namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
 {
     public static class NinjaUtils
     {
-        public static BlockchainTransaction ConvertToBlockchainTransaction(this BitcoinAddressOperation item, bool isMainNet)
+        public static BlockchainTransaction ConvertToBlockchainTransaction(this GetTransactionResponse item, bool isMainNet, string address)
         {
             var network = isMainNet ? Network.Main : Network.RegTest;
             return new BlockchainTransaction
             {
-                Confirmations = item.Confirmations,
-                Hash = item.TransactionId,
-                BlockId = item.BlockId,
-                Height = item.Height,
+                Confirmations = item.Block.Confirmations,
+                Hash = item.TransactionId.ToString(),
+                BlockId = item.Block.BlockId.ToString(),
+                Height = item.Block.Height,
                 ReceivedCoins = item.ReceivedCoins.Select(
                     x => new InputOutput
                     {
-                        Address = GetScriptFromBytes(x.ScriptPubKey).GetDestinationAddress(network).ToString(),
-                        Amount = x.Quantity ?? x.Value,
-                        BcnAssetId = x.AssetId
-                    }).ToArray(),
+                        Address = x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                        Amount = (x as ColoredCoin)?.Amount.Quantity ?? ((Coin)x).Amount.Satoshi,
+                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString()
+                    }).Where(x => x.Address == address).ToArray(),
                 SpentCoins = item.SpentCoins.Select(
                     x => new InputOutput
                     {
-                        Address = GetScriptFromBytes(x.ScriptPubKey).GetDestinationAddress(network).ToString(),
-                        Amount = x.Quantity ?? x.Value,
-                        BcnAssetId = x.AssetId
-                    }).ToArray()
+                        Address = x.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                        Amount = (x as ColoredCoin)?.Amount.Quantity ?? ((Coin)x).Amount.Satoshi,
+                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString()
+                    }).Where(x => x.Address == address).ToArray()
             };
-        }
-        
-        private static Script GetScriptFromBytes(string data)
-        {
-            var bytes = Encoders.Hex.DecodeData(data);
-            var script = Script.FromBytesUnsafe(bytes);
-            bool hasOps = false;
-            var reader = script.CreateReader();
-            foreach (var op in reader.ToEnumerable())
-            {
-                hasOps = true;
-                if (op.IsInvalid || (op.Name == "OP_UNKNOWN" && op.PushData == null))
-                    return null;
-            }
-            return !hasOps ? null : script;
         }
     }
 }

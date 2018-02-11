@@ -110,6 +110,20 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             return (await _tableStorage.GetTopRecordAsync(BcnCredentialsRecordEntity.ByClientId.GeneratePartition(clientId))).Address;
         }
 
+        public async Task<IEnumerable<IBcnCredentialsRecord>> GetAllAsync(string assetId)
+        {
+            var filter = TableQuery.CombineFilters(
+                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal,
+                    BcnCredentialsRecordEntity.ByAssetAddress.GeneratePartition()),
+                TableOperators.And,
+                TableQuery.GenerateFilterCondition("AssetId", QueryComparisons.Equal, assetId)
+            );
+
+            var query = new TableQuery<BcnCredentialsRecordEntity>().Where(filter);
+
+            return await _tableStorage.WhereAsync(query);
+        }
+
         public async Task<IBcnCredentialsRecord> GetByAssetAddressAsync(string assetAddress)
         {
             return await _tableStorage.GetDataAsync(BcnCredentialsRecordEntity.ByAssetAddress.GeneratePartition(),

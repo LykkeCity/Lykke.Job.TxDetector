@@ -70,5 +70,10 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             return _tableStorage.ScanDataAsync(partitionKey, chunk);
 
         }
+
+        public async Task<IEnumerable<IWalletCredentials>> GetAllAsync()
+        {
+            return await _tableStorage.GetDataAsync(WalletCredentialsEntity.ByClientId.GeneratePartitionKey());
+        }
     }
 }

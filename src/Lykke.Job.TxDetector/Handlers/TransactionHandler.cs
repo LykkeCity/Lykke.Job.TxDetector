@@ -24,13 +24,13 @@ namespace Lykke.Job.TxDetector.Handlers
 
         private readonly ILog _log;
         private readonly AppSettings.TxDetectorSettings _settings;
-        private readonly ISrvBlockchainReader _srvBlockchainReader;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
         private readonly IInternalOperationsRepository _internalOperationsRepository;
         private readonly ICachedAssetsService _assetsService;
         private readonly IConfirmedTransactionsRepository _confirmedTransactionsRepository;
         private readonly IPostponedCashInRepository _postponedCashInRepository;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
+        private readonly IQBitNinjaApiCaller _qBitNinjaApiCaller;
 
         public TransactionHandler(
             [NotNull] ILog log,
@@ -41,8 +41,9 @@ namespace Lykke.Job.TxDetector.Handlers
             [NotNull] IPostponedCashInRepository postponedCashInRepository,
             [NotNull] IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
             [NotNull] AppSettings.TxDetectorSettings settings,
-            [NotNull] ISrvBlockchainReader srvBlockchainReader)
+            [NotNull] IQBitNinjaApiCaller qBitNinjaApiCaller)
         {
+            _qBitNinjaApiCaller = qBitNinjaApiCaller ?? throw new ArgumentNullException(nameof(qBitNinjaApiCaller));
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository ?? throw new ArgumentNullException(nameof(balanceChangeTransactionsRepository));
             _internalOperationsRepository = internalOperationsRepository ?? throw new ArgumentNullException(nameof(internalOperationsRepository));
@@ -51,7 +52,6 @@ namespace Lykke.Job.TxDetector.Handlers
             _postponedCashInRepository = postponedCashInRepository ?? throw new ArgumentNullException(nameof(postponedCashInRepository));
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry ?? throw new ArgumentNullException(nameof(appGlobalSettingsRepositry));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _srvBlockchainReader = srvBlockchainReader ?? throw new ArgumentNullException(nameof(srvBlockchainReader));
         }
 
         // entry point
@@ -59,7 +59,8 @@ namespace Lykke.Job.TxDetector.Handlers
         {
             await _log.WriteInfoAsync(nameof(TransactionHandler), nameof(ProcessTransactionCommand), command.ToJson(), "");
 
-            var confirmations = await _srvBlockchainReader.GetConfirmationsCount(command.TransactionHash);
+            var confirmations = (await _qBitNinjaApiCaller.GetTransaction(command.TransactionHash))?.Block?.Confirmations;
+
             var isConfirmed = confirmations >= _settings.TxDetectorConfirmationsLimit;
             if (!isConfirmed)
             {
