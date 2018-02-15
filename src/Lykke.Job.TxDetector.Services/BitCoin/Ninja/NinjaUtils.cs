@@ -22,14 +22,14 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                     {
                         Address = x.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString(),
                         Amount = (x as ColoredCoin)?.Amount.Quantity ?? ((Coin)x).Amount.Satoshi,
-                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString()
+                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString(network)
                     }).Where(x => x.Address == address).ToArray(),
                 SpentCoins = item.SpentCoins.Select(
                     x => new InputOutput
                     {
                         Address = x.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString(),
                         Amount = (x as ColoredCoin)?.Amount.Quantity ?? ((Coin)x).Amount.Satoshi,
-                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString()
+                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString(network)
                     }).Where(x => x.Address == address).ToArray()
             };
         }
