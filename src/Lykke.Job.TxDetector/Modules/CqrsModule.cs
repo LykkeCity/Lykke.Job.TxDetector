@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using Common.Log;
-using Inceptum.Cqrs.Configuration;
 using Inceptum.Messaging;
-using Inceptum.Messaging.RabbitMq;
 using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Events;
@@ -13,6 +12,7 @@ using Lykke.Job.TxDetector.Projections;
 using Lykke.Job.TxDetector.Sagas;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.Messaging;
+using Lykke.Messaging.RabbitMq;
 using Lykke.SettingsReader;
 
 namespace Lykke.Job.TxDetector.Modules
