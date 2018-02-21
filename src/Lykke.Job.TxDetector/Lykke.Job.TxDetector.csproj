@@ -57,8 +57,4 @@
       <LastGenOutput>TextResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Sagas\Projections\" />
-  </ItemGroup>
 </Project>
