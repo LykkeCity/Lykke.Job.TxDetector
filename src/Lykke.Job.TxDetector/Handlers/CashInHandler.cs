@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Inceptum.Messaging;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
@@ -11,6 +10,7 @@ using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
+using Lykke.Messaging;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using Microsoft.Rest;
