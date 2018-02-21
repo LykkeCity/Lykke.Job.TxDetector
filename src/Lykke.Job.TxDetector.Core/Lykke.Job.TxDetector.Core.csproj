@@ -6,10 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.Common" Version="4.1.0" />
+    <PackageReference Include="Lykke.Common" Version="4.4.3" />
     <PackageReference Include="Lykke.Service.Assets.Client" Version="1.0.17" />
-    <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.85" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.1.4" />
+    <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.94" />
+    <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
     <PackageReference Include="QBitNinja.Client" Version="1.0.3.46" />
   </ItemGroup>
 
