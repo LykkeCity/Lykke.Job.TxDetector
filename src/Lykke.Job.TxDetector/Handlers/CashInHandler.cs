@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Inceptum.Messaging;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
@@ -11,6 +10,7 @@ using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
+using Lykke.Messaging;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using Microsoft.Rest;
@@ -23,16 +23,20 @@ namespace Lykke.Job.TxDetector.Handlers
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
         private readonly IBitcoinCashinRepository _bitcoinCashinRepository;
+        private readonly IPostponedCashInRepository _postponedCashInRepository;
 
         public CashInHandler(
             [NotNull] ILog log,
             [NotNull] IMatchingEngineClient matchingEngineClient,
-            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient, IBitcoinCashinRepository bitcoinCashinRepository)
+            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient,
+            [NotNull] IBitcoinCashinRepository bitcoinCashinRepository,
+            [NotNull] IPostponedCashInRepository postponedCashInRepository)
         {
-            _bitcoinCashinRepository = bitcoinCashinRepository;
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _matchingEngineClient = matchingEngineClient ?? throw new ArgumentNullException(nameof(matchingEngineClient));
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
+            _bitcoinCashinRepository = bitcoinCashinRepository ?? throw new ArgumentNullException(nameof(bitcoinCashinRepository));
+            _postponedCashInRepository = postponedCashInRepository ?? throw new ArgumentNullException(nameof(postponedCashInRepository));
         }
 
         public async Task<CommandHandlingResult> Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
@@ -120,6 +124,18 @@ namespace Lykke.Job.TxDetector.Handlers
             ChaosKitty.Meow();
 
             eventPublisher.PublishEvent(new TransactionProcessedEvent { ClientId = command.Transaction.ClientId, Asset = command.Asset, Amount = command.Amount });
+
+            return CommandHandlingResult.Ok();
+        }
+
+
+        public async Task<CommandHandlingResult> Handle(SavePostponedCashInCommand command)
+        {
+            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(SavePostponedCashInCommand), command.ToJson(), "");
+
+            await _postponedCashInRepository.SaveAsync(command.TransactionHash);
+
+            ChaosKitty.Meow();
 
             return CommandHandlingResult.Ok();
         }

@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
@@ -13,7 +12,6 @@ using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Services.BitCoin.Ninja;
 using Lykke.JobTriggers.Triggers.Attributes;
-using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using QBitNinja.Client.Models;
 
 namespace Lykke.Job.TxDetector.TriggerHandlers

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
@@ -28,10 +28,9 @@ using Lykke.Job.TxDetector.Services.BitCoin;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
-using Lykke.Service.Assets.Client.Custom;
+using Lykke.Service.Assets.Client;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
-using NBitcoin;
 using QBitNinja.Client;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -75,12 +74,9 @@ namespace Lykke.Job.TxDetector.Modules
             // NOTE: You can implement your own poison queue notifier. See https://github.com/LykkeCity/JobTriggers/blob/master/readme.md
             // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
-            _services.UseAssetsClient(new AssetServiceSettings
-            {
-                BaseUri = new Uri(_settings.Assets.ServiceUrl),
-                AssetPairsCacheExpirationPeriod = _settings.TxDetectorJob.AssetsCache.ExpirationPeriod,
-                AssetsCacheExpirationPeriod = _settings.TxDetectorJob.AssetsCache.ExpirationPeriod
-            });
+            _services.RegisterAssetsClient(AssetServiceSettings.Create(
+                new Uri(_settings.Assets.ServiceUrl), 
+                _settings.TxDetectorJob.AssetsCache.ExpirationPeriod));
 
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);

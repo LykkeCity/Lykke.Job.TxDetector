@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using Common.Log;
-using Inceptum.Cqrs.Configuration;
-using Inceptum.Messaging;
-using Inceptum.Messaging.RabbitMq;
 using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Events;
@@ -13,6 +11,7 @@ using Lykke.Job.TxDetector.Projections;
 using Lykke.Job.TxDetector.Sagas;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.Messaging;
+using Lykke.Messaging.RabbitMq;
 using Lykke.SettingsReader;
 
 namespace Lykke.Job.TxDetector.Modules
@@ -70,7 +69,10 @@ namespace Lykke.Job.TxDetector.Modules
                         .FailedCommandRetryDelay(defaultRetryDelay)
                         .ListeningCommands(typeof(ProcessTransactionCommand))
                             .On("transactions-commands")
-                        .PublishingEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
+                        .PublishingEvents(
+                                typeof(TransferOperationCreatedEvent),
+                                typeof(CashInOperationCreatedEvent),
+                                typeof(ConfirmationSavedEvent))
                             .With("transactions-events")
                         .WithCommandsHandler<TransactionHandler>(),
 
@@ -84,7 +86,11 @@ namespace Lykke.Job.TxDetector.Modules
 
                     Register.BoundedContext("cashin")
                         .FailedCommandRetryDelay(defaultRetryDelay)
-                        .ListeningCommands(typeof(RegisterCashInOutCommand), typeof(RegisterBitcoinCashInCommand), typeof(ProcessCashInCommand))
+                        .ListeningCommands(
+                                typeof(RegisterCashInOutCommand),
+                                typeof(RegisterBitcoinCashInCommand),
+                                typeof(ProcessCashInCommand),
+                                typeof(SavePostponedCashInCommand))
                             .On("cashin-commands")
                         .PublishingEvents(typeof(CashInOutOperationRegisteredEvent), typeof(BitcoinCashInRegisteredEvent), typeof(TransactionProcessedEvent))
                             .With("cashin-events")
@@ -108,13 +114,23 @@ namespace Lykke.Job.TxDetector.Modules
                         .WithProjection(projection, "transfer"),
 
                     Register.Saga<ConfirmationsSaga>("transactions-saga")
-                        .ListeningEvents(typeof(TransferOperationCreatedEvent), typeof(CashInOperationCreatedEvent))
+                        .ListeningEvents(
+                                typeof(TransferOperationCreatedEvent),
+                                typeof(CashInOperationCreatedEvent),
+                                typeof(ConfirmationSavedEvent))
                             .From("transactions").On("transactions-events")
-                        .ListeningEvents(typeof(CashInOutOperationRegisteredEvent), typeof(BitcoinCashInRegisteredEvent), typeof(TransactionProcessedEvent))
+                        .ListeningEvents(
+                                typeof(CashInOutOperationRegisteredEvent),
+                                typeof(BitcoinCashInRegisteredEvent),
+                                typeof(TransactionProcessedEvent))
                             .From("cashin").On("cashin-events")
                         .PublishingCommands(typeof(ProcessTransferCommand))
                             .To("transfer").With("transfer-commands")
-                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(RegisterBitcoinCashInCommand), typeof(ProcessCashInCommand))
+                        .PublishingCommands(
+                                typeof(RegisterCashInOutCommand),
+                                typeof(RegisterBitcoinCashInCommand),
+                                typeof(ProcessCashInCommand),
+                                typeof(SavePostponedCashInCommand))
                             .To("cashin").With("cashin-commands")
                         .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
                             .To("email").With("email-commands")
@@ -123,15 +139,7 @@ namespace Lykke.Job.TxDetector.Modules
 
                     Register.DefaultRouting
                         .PublishingCommands(typeof(ProcessTransactionCommand))
-                            .To("transactions").With("transactions-commands")
-                        .PublishingCommands(typeof(ProcessTransferCommand))
-                            .To("transfer").With("transfer-commands")
-                        .PublishingCommands(typeof(RegisterCashInOutCommand), typeof(RegisterBitcoinCashInCommand), typeof(ProcessCashInCommand))
-                            .To("cashin").With("cashin-commands")
-                        .PublishingCommands(typeof(SendNoRefundDepositDoneMailCommand))
-                            .To("email").With("email-commands")
-                        .PublishingCommands(typeof(SendNotificationCommand))
-                            .To("notifications").With("notifications-commands"));
+                            .To("transactions").With("transactions-commands"));
             })
             .As<ICqrsEngine>().SingleInstance();
         }

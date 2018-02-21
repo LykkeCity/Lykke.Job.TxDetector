@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using NBitcoin;
 using QBitNinja.Client;
