@@ -1,7 +1,6 @@
 using System.Linq;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using QBitNinja.Client.Models;
 
 namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja

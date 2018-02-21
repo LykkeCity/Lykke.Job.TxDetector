@@ -14,7 +14,7 @@ using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Models;
 using Lykke.Job.TxDetector.Utils;
-using Lykke.Service.Assets.Client.Custom;
+using Lykke.Service.Assets.Client;
 
 namespace Lykke.Job.TxDetector.Handlers
 {
@@ -26,7 +26,7 @@ namespace Lykke.Job.TxDetector.Handlers
         private readonly AppSettings.TxDetectorSettings _settings;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
         private readonly IInternalOperationsRepository _internalOperationsRepository;
-        private readonly ICachedAssetsService _assetsService;
+        private readonly IAssetsServiceWithCache _assetsService;
         private readonly IConfirmedTransactionsRepository _confirmedTransactionsRepository;
         private readonly IPostponedCashInRepository _postponedCashInRepository;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
@@ -36,7 +36,7 @@ namespace Lykke.Job.TxDetector.Handlers
             [NotNull] ILog log,
             [NotNull] IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             [NotNull] IInternalOperationsRepository internalOperationsRepository,
-            [NotNull] ICachedAssetsService assetsService,
+            [NotNull] IAssetsServiceWithCache assetsService,
             [NotNull] IConfirmedTransactionsRepository confirmedTransactionsRepository,
             [NotNull] IPostponedCashInRepository postponedCashInRepository,
             [NotNull] IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
@@ -129,7 +129,7 @@ namespace Lykke.Job.TxDetector.Handlers
             return CommandHandlingResult.Ok();
         }
 
-        private async Task<IAsset> GetAssetByBcnIdAsync(string bcnId)
+        private async Task<Service.Assets.Client.Models.Asset> GetAssetByBcnIdAsync(string bcnId)
         {
             return string.IsNullOrEmpty(bcnId)
                 ? await _assetsService.TryGetAssetAsync(LykkeConstants.BitcoinAssetId)
