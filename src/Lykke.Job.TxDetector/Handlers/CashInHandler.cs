@@ -32,7 +32,7 @@ namespace Lykke.Job.TxDetector.Handlers
             [NotNull] IBitcoinCashinRepository bitcoinCashinRepository,
             [NotNull] IPostponedCashInRepository postponedCashInRepository)
         {
-            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _log = log.CreateComponentScope(nameof(CashInHandler));
             _matchingEngineClient = matchingEngineClient ?? throw new ArgumentNullException(nameof(matchingEngineClient));
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
             _bitcoinCashinRepository = bitcoinCashinRepository ?? throw new ArgumentNullException(nameof(bitcoinCashinRepository));
@@ -41,7 +41,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterCashInOutCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(RegisterCashInOutCommand), command, "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -85,7 +85,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(RegisterBitcoinCashInCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterBitcoinCashInCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(RegisterBitcoinCashInCommand), command, "");
             var id = command.CommandId;
             var transaction = command.Transaction;
 
@@ -106,7 +106,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(ProcessCashInCommand), command, "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -117,7 +117,7 @@ namespace Lykke.Job.TxDetector.Handlers
             var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
             if (responseModel.Status != MeStatusCodes.Ok && responseModel.Status != MeStatusCodes.AlreadyProcessed && responseModel.Status != MeStatusCodes.Duplicate)
             {
-                await _log.WriteWarningAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), responseModel.ToJson());
+                _log.WriteInfo(nameof(ProcessCashInCommand), command, responseModel.ToJson());
                 throw new ProcessingException(responseModel.ToJson());
             }
 
@@ -131,7 +131,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(SavePostponedCashInCommand command)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(SavePostponedCashInCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(SavePostponedCashInCommand), command, "");
 
             await _postponedCashInRepository.SaveAsync(command.TransactionHash);
 

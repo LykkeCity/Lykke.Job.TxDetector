@@ -39,7 +39,7 @@ namespace Lykke.Job.TxDetector.Sagas
             [NotNull] IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             [NotNull] IInternalOperationsRepository internalOperationsRepository)
         {
-            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _log = log.CreateComponentScope(nameof(ConfirmationsSaga));
             _clientAccountsRepository = clientAccountsRepository ?? throw new ArgumentNullException(nameof(clientAccountsRepository));
             _assetsService = assetsService ?? throw new ArgumentNullException(nameof(assetsService));
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry ?? throw new ArgumentNullException(nameof(appGlobalSettingsRepositry));
@@ -51,10 +51,8 @@ namespace Lykke.Job.TxDetector.Sagas
         [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
         private async Task Handle(CashInOperationCreatedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOperationCreatedEvent), evt.ToJson(), "");
-
-            ChaosKitty.Meow();
-
+            _log.WriteInfo(nameof(CashInOperationCreatedEvent), evt, "");
+            
             var cmd = new RegisterCashInOutCommand
             {
                 Transaction = evt.Transaction,
@@ -68,10 +66,8 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(CashInOutOperationRegisteredEvent), evt.ToJson(), "");
-
-            ChaosKitty.Meow();
-
+            _log.WriteInfo(nameof(CashInOutOperationRegisteredEvent), evt, "");
+            
             var cmd = new RegisterBitcoinCashInCommand
             {
                 Transaction = evt.Transaction,
@@ -85,10 +81,8 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(BitcoinCashInRegisteredEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(BitcoinCashInRegisteredEvent), evt.ToJson());
-
-            ChaosKitty.Meow();
-
+            _log.WriteInfo(nameof(BitcoinCashInRegisteredEvent), evt, "");
+            
             var cmd = new ProcessCashInCommand
             {
                 Transaction = evt.Transaction,
@@ -103,10 +97,8 @@ namespace Lykke.Job.TxDetector.Sagas
         [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
         private async Task Handle(TransferOperationCreatedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransferOperationCreatedEvent), evt.ToJson(), "");
-
-            ChaosKitty.Meow();
-
+            _log.WriteInfo(nameof(TransferOperationCreatedEvent), evt, "");
+            
             var cmd = new ProcessTransferCommand
             {
                 TransferId = evt.TransferId
@@ -117,7 +109,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(TransactionProcessedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(TransactionProcessedEvent), evt.ToJson(), "");
+            _log.WriteInfo(nameof(TransactionProcessedEvent), evt, "");
 
             ChaosKitty.Meow();
 
@@ -148,7 +140,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(ConfirmationSavedEvent evt, ICommandSender sender)
         {
-            await _log.WriteInfoAsync(nameof(ConfirmationsSaga), nameof(ConfirmationSavedEvent), evt.ToJson(), "");
+            _log.WriteInfo(nameof(ConfirmationSavedEvent), evt, "");
 
             var hash = evt.TransactionHash;
             var clientId = evt.ClientId;
