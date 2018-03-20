@@ -171,6 +171,10 @@ namespace Lykke.Job.TxDetector.Sagas
                 if (tx.IsCashIn(tx.Multisig))
                 {
                     var cashIns = tx.GetOperationSummary(tx.Multisig);
+                    if (cashIns.Count > 1)
+                    {
+                        _log.WriteWarning(nameof(ConfirmationSavedEvent), evt, $"Multiple assets in a single transaction detected: {cashIns.ToJson()}");
+                    }
 
                     var skipBtc = (await _appGlobalSettingsRepositry.GetAsync()).BtcOperationsDisabled;
 
