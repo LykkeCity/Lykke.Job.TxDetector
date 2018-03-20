@@ -174,6 +174,8 @@ namespace Lykke.Job.TxDetector.Sagas
                     if (cashIns.Count > 1)
                     {
                         _log.WriteWarning(nameof(ConfirmationSavedEvent), evt, $"Multiple assets in a single transaction detected: {cashIns.ToJson()}");
+                        // there should be only one asset in cash-in operation; 
+                        // code bellow with 'foreach' statement is kept for a while in case of obsolete request with multiple assets;
                     }
 
                     var skipBtc = (await _appGlobalSettingsRepositry.GetAsync()).BtcOperationsDisabled;
