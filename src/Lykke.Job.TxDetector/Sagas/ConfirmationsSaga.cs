@@ -51,8 +51,8 @@ namespace Lykke.Job.TxDetector.Sagas
         [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
         private async Task Handle(CashInOperationCreatedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(CashInOperationCreatedEvent), evt, "");
-            
+            _log.WriteInfo(nameof(CashInOperationCreatedEvent), evt, "Handle received message");
+
             var cmd = new RegisterCashInOutCommand
             {
                 Transaction = evt.Transaction,
@@ -66,8 +66,8 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(CashInOutOperationRegisteredEvent), evt, "");
-            
+            _log.WriteInfo(nameof(CashInOutOperationRegisteredEvent), evt, "Handle received message");
+
             var cmd = new RegisterBitcoinCashInCommand
             {
                 Transaction = evt.Transaction,
@@ -81,8 +81,8 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(BitcoinCashInRegisteredEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(BitcoinCashInRegisteredEvent), evt, "");
-            
+            _log.WriteInfo(nameof(BitcoinCashInRegisteredEvent), evt, "Handle received message");
+
             var cmd = new ProcessCashInCommand
             {
                 Transaction = evt.Transaction,
@@ -97,8 +97,8 @@ namespace Lykke.Job.TxDetector.Sagas
         [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
         private async Task Handle(TransferOperationCreatedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(TransferOperationCreatedEvent), evt, "");
-            
+            _log.WriteInfo(nameof(TransferOperationCreatedEvent), evt, "Handle received message");
+
             var cmd = new ProcessTransferCommand
             {
                 TransferId = evt.TransferId
@@ -109,7 +109,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(TransactionProcessedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(TransactionProcessedEvent), evt, "");
+            _log.WriteInfo(nameof(TransactionProcessedEvent), evt, "Handle received message");
 
             ChaosKitty.Meow();
 
@@ -140,7 +140,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(ConfirmationSavedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(ConfirmationSavedEvent), evt, "");
+            _log.WriteInfo(nameof(ConfirmationSavedEvent), evt, "Handle received message");
 
             var hash = evt.TransactionHash;
             var clientId = evt.ClientId;
