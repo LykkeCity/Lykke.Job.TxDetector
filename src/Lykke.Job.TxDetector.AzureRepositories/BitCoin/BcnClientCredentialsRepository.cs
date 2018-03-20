@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
@@ -85,31 +83,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             _tableStorage = tableStorage;
         }
 
-        public async Task SaveAsync(IBcnCredentialsRecord credsRecord)
-        {
-            var byClientEntity = BcnCredentialsRecordEntity.ByClientId.Create(credsRecord);
-            var byAssetAddressEntity = BcnCredentialsRecordEntity.ByAssetAddress.Create(credsRecord);
-
-            await _tableStorage.InsertAsync(byClientEntity);
-            await _tableStorage.InsertAsync(byAssetAddressEntity);
-        }
-
-        public async Task<IBcnCredentialsRecord> GetAsync(string clientId, string assetId)
-        {
-            return await _tableStorage.GetDataAsync(BcnCredentialsRecordEntity.ByClientId.GeneratePartition(clientId),
-                BcnCredentialsRecordEntity.ByClientId.GenerateRowKey(assetId));
-        }
-
-        public async Task<IEnumerable<IBcnCredentialsRecord>> GetAsync(string clientId)
-        {
-            return await _tableStorage.GetDataAsync(BcnCredentialsRecordEntity.ByClientId.GeneratePartition(clientId));
-        }
-
-        public async Task<string> GetClientAddress(string clientId)
-        {
-            return (await _tableStorage.GetTopRecordAsync(BcnCredentialsRecordEntity.ByClientId.GeneratePartition(clientId))).Address;
-        }
-
         public async Task<IEnumerable<IBcnCredentialsRecord>> GetAllAsync(string assetId)
         {
             var filter = TableQuery.CombineFilters(
@@ -122,12 +95,6 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
             var query = new TableQuery<BcnCredentialsRecordEntity>().Where(filter);
 
             return await _tableStorage.WhereAsync(query);
-        }
-
-        public async Task<IBcnCredentialsRecord> GetByAssetAddressAsync(string assetAddress)
-        {
-            return await _tableStorage.GetDataAsync(BcnCredentialsRecordEntity.ByAssetAddress.GeneratePartition(),
-                BcnCredentialsRecordEntity.ByAssetAddress.GenerateRowKey(assetAddress));
         }
     }
 }

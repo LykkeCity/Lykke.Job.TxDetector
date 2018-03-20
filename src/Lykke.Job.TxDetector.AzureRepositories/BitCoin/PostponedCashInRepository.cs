@@ -38,7 +38,7 @@ namespace Lykke.Job.TxDetector.AzureRepositories.BitCoin
 
         public Task SaveAsync(string hash)
         {
-            return _tableStorage.InsertAsync(PostponedCashInRecord.Create(hash));
+            return _tableStorage.InsertOrReplaceAsync(PostponedCashInRecord.Create(hash));
         }
     }
 }

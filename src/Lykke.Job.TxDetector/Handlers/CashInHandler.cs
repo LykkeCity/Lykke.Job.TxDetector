@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Inceptum.Messaging;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
@@ -11,6 +10,7 @@ using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Utils;
 using Lykke.MatchingEngine.Connector.Abstractions.Models;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
+using Lykke.Messaging;
 using Lykke.Service.OperationsRepository.AutorestClient.Models;
 using Lykke.Service.OperationsRepository.Client.Abstractions.CashOperations;
 using Microsoft.Rest;
@@ -23,21 +23,25 @@ namespace Lykke.Job.TxDetector.Handlers
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly ICashOperationsRepositoryClient _cashOperationsRepositoryClient;
         private readonly IBitcoinCashinRepository _bitcoinCashinRepository;
+        private readonly IPostponedCashInRepository _postponedCashInRepository;
 
         public CashInHandler(
             [NotNull] ILog log,
             [NotNull] IMatchingEngineClient matchingEngineClient,
-            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient, IBitcoinCashinRepository bitcoinCashinRepository)
+            [NotNull] ICashOperationsRepositoryClient cashOperationsRepositoryClient,
+            [NotNull] IBitcoinCashinRepository bitcoinCashinRepository,
+            [NotNull] IPostponedCashInRepository postponedCashInRepository)
         {
-            _bitcoinCashinRepository = bitcoinCashinRepository;
-            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _log = log.CreateComponentScope(nameof(CashInHandler));
             _matchingEngineClient = matchingEngineClient ?? throw new ArgumentNullException(nameof(matchingEngineClient));
             _cashOperationsRepositoryClient = cashOperationsRepositoryClient ?? throw new ArgumentNullException(nameof(cashOperationsRepositoryClient));
+            _bitcoinCashinRepository = bitcoinCashinRepository ?? throw new ArgumentNullException(nameof(bitcoinCashinRepository));
+            _postponedCashInRepository = postponedCashInRepository ?? throw new ArgumentNullException(nameof(postponedCashInRepository));
         }
 
         public async Task<CommandHandlingResult> Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterCashInOutCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(RegisterCashInOutCommand), command, "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -81,7 +85,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(RegisterBitcoinCashInCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(RegisterBitcoinCashInCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(RegisterBitcoinCashInCommand), command, "");
             var id = command.CommandId;
             var transaction = command.Transaction;
 
@@ -102,7 +106,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
         {
-            await _log.WriteInfoAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), "");
+            _log.WriteInfo(nameof(ProcessCashInCommand), command, "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -113,13 +117,25 @@ namespace Lykke.Job.TxDetector.Handlers
             var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
             if (responseModel.Status != MeStatusCodes.Ok && responseModel.Status != MeStatusCodes.AlreadyProcessed && responseModel.Status != MeStatusCodes.Duplicate)
             {
-                await _log.WriteWarningAsync(nameof(CashInHandler), nameof(ProcessCashInCommand), command.ToJson(), responseModel.ToJson());
+                _log.WriteInfo(nameof(ProcessCashInCommand), command, responseModel.ToJson());
                 throw new ProcessingException(responseModel.ToJson());
             }
 
             ChaosKitty.Meow();
 
             eventPublisher.PublishEvent(new TransactionProcessedEvent { ClientId = command.Transaction.ClientId, Asset = command.Asset, Amount = command.Amount });
+
+            return CommandHandlingResult.Ok();
+        }
+
+
+        public async Task<CommandHandlingResult> Handle(SavePostponedCashInCommand command)
+        {
+            _log.WriteInfo(nameof(SavePostponedCashInCommand), command, "");
+
+            await _postponedCashInRepository.SaveAsync(command.TransactionHash);
+
+            ChaosKitty.Meow();
 
             return CommandHandlingResult.Ok();
         }

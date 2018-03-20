@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
@@ -38,10 +37,6 @@ namespace Lykke.Job.TxDetector.Core.Domain.BitCoin
 
     public interface IWalletCredentialsRepository
     {
-        Task<IWalletCredentials> GetAsync(string clientId);
-
-        Task ScanAllAsync(Func<IEnumerable<IWalletCredentials>, Task> chunk);
-
         Task<IEnumerable<IWalletCredentials>> GetAllAsync();
     }
 
