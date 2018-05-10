@@ -32,6 +32,7 @@ using Lykke.Service.Assets.Client;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
 using QBitNinja.Client;
+using Lykke.Job.TxDetector.Core.Services.Clients;
 
 namespace Lykke.Job.TxDetector.Modules
 {
@@ -106,6 +107,8 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
+
+            builder.Register<IClientAccounts>( x => new Clients( _settings.ClientAccountClient.ServiceUrl));
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -154,11 +157,6 @@ namespace Lykke.Job.TxDetector.Modules
                 new AppGlobalSettingsRepository(
                     AzureTableStorage<AppGlobalSettingsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
-
-            builder.RegisterInstance<IClientAccountsRepository>(
-                new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Traders", _log)));
 
             builder.RegisterInstance<IClientSettingsRepository>(
                 new ClientSettingsRepository(
