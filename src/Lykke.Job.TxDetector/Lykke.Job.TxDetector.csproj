@@ -13,16 +13,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.Common" Version="6.5.0" />
+    <PackageReference Include="Lykke.Common" Version="6.7.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.7.0" />
     <PackageReference Include="Lykke.Cqrs" Version="4.5.0" />
     <PackageReference Include="Lykke.JobTriggers" Version="2.1.0" />
-    <PackageReference Include="Lykke.Logs" Version="4.2.1" />
-    <PackageReference Include="Lykke.MatchingEngineConnector" Version="4.2.2" />
+    <PackageReference Include="Lykke.Logs" Version="4.3.1" />
+    <PackageReference Include="Lykke.MatchingEngineConnector" Version="5.0.3" />
     <PackageReference Include="Lykke.Messaging" Version="5.0.0" />
     <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.0.0" />
-    <PackageReference Include="Lykke.Service.Assets.Client" Version="3.3.1" />
-    <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.94" />
+    <PackageReference Include="Lykke.Service.Assets.Client" Version="3.3.2" />
+    <PackageReference Include="Lykke.Service.OperationsRepository.Client" Version="1.0.96" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.3.1" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.1" />

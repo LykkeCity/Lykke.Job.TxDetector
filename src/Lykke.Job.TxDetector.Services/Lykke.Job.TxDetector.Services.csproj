@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.Common" Version="6.5.0" />
+    <PackageReference Include="Lykke.Common" Version="6.7.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.5" />
   </ItemGroup>
 
