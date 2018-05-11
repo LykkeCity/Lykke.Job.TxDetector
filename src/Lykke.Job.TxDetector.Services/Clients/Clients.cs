@@ -8,34 +8,14 @@ using Newtonsoft.Json;
 
 namespace Lykke.Job.TxDetector.AzureRepositories.Clients
 {
-    public class ClientAccount : IClientAccount, IPasswordKeeping
+    public class ClientAccount : IClientAccount
     {
-        [JsonProperty("Registered")]
-        public DateTime Registered { get; set; }
-
-        [JsonProperty("Id")]
-        public string Id { get; set; }
-  
         [JsonProperty("Email")]
         public string Email { get; set; }
-
-        [JsonProperty("Phone")]
-        public string Phone { get; set; }
-
-        [JsonProperty("Pin")]
-        public string Pin { get; set; }
 
         [JsonProperty("NotificationsId")]
         public string NotificationsId { get; set; }
 
-        public string Salt { get; set; }
-        public string Hash { get; set; }
-
-        [JsonProperty("PartnerId")]
-        public string PartnerId { get; set; }
-
-        [JsonProperty("IsReviewAccount")]
-        public bool IsReviewAccount { get; set; }
     }
 
     public class Clients : IClientAccounts
