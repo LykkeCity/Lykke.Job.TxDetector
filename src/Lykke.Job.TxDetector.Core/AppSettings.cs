@@ -13,7 +13,7 @@ namespace Lykke.Job.TxDetector.Core
         public AssetsSettings Assets { get; set; }
         public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
 
-        public ClientAccountClientSettings ClientAccountClient { get; set; }
+        public ClientAccountClientSettings ClientAccountServiceClient { get; set; }
 
         public class TxDetectorSettings
         {
