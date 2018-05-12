@@ -29,10 +29,10 @@ using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client;
+using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
 using QBitNinja.Client;
-using Lykke.Job.TxDetector.Core.Services.Clients;
 
 namespace Lykke.Job.TxDetector.Modules
 {
@@ -76,13 +76,14 @@ namespace Lykke.Job.TxDetector.Modules
             // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
             _services.RegisterAssetsClient(AssetServiceSettings.Create(
-                new Uri(_settings.Assets.ServiceUrl), 
+                new Uri(_settings.Assets.ServiceUrl),
                 _settings.TxDetectorJob.AssetsCache.ExpirationPeriod));
 
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
             BindServices(builder);
             BindNinja(builder);
+            BindClients(builder);
 
             builder.Populate(_services);
         }
@@ -107,8 +108,11 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
+        }
 
-            builder.Register<IClientAccounts>( x => new Clients( _settings.ClientAccountServiceClient.ServiceUrl));
+        private void BindClients(ContainerBuilder builder)
+        {
+            builder.RegisterLykkeServiceClient(_settings.ClientAccountServiceClient.ServiceUrl);
         }
 
         private void BindRepositories(ContainerBuilder builder)
