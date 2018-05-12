@@ -8,7 +8,6 @@ using Lykke.Cqrs;
 using Lykke.Job.TxDetector.Commands;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
-using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
@@ -24,7 +23,6 @@ namespace Lykke.Job.TxDetector.Sagas
     public class ConfirmationsSaga
     {
         private readonly ILog _log;
-        private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly IClientAccountClient _clientAccountClient;
         private readonly IAssetsServiceWithCache _assetsService;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
@@ -33,7 +31,6 @@ namespace Lykke.Job.TxDetector.Sagas
 
         public ConfirmationsSaga(
             [NotNull] ILog log,
-            [NotNull] IClientSettingsRepository clientSettingsRepository,
             [NotNull] IClientAccountClient clientAccountClient,
             [NotNull] IAssetsServiceWithCache assetsService,
             [NotNull] IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
@@ -46,7 +43,6 @@ namespace Lykke.Job.TxDetector.Sagas
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry ?? throw new ArgumentNullException(nameof(appGlobalSettingsRepositry));
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository ?? throw new ArgumentNullException(nameof(balanceChangeTransactionsRepository));
             _internalOperationsRepository = internalOperationsRepository ?? throw new ArgumentNullException(nameof(internalOperationsRepository));
-            _clientSettingsRepository = clientSettingsRepository ?? throw new ArgumentNullException(nameof(clientSettingsRepository));
         }
 
         [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
@@ -134,7 +130,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
             ChaosKitty.Meow();
 
-            var pushSettings = await _clientSettingsRepository.GetSettings<PushNotificationsSettings>(evt.ClientId);
+            var pushSettings = await _clientAccountClient.GetPushNotificationAsync(evt.ClientId);
             if (pushSettings.Enabled)
             {
                 var sendNotificationCommand = new SendNotificationCommand
