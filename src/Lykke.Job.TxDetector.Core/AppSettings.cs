@@ -12,6 +12,7 @@ namespace Lykke.Job.TxDetector.Core
         public SlackNotificationsSettings SlackNotifications { get; set; }
         public AssetsSettings Assets { get; set; }
         public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
+        public ClientAccountClientSettings ClientAccountClient { get; set; }
 
         public class TxDetectorSettings
         {
@@ -95,7 +96,12 @@ namespace Lykke.Job.TxDetector.Core
 
             public string QueueName { get; set; }
         }
-    }
+
+        public class ClientAccountClientSettings
+        {
+            public string ServiceUrl { get; set; }
+        }
+}
 
     public static class NinjaSettingsExtensions
     {

@@ -11,6 +11,7 @@ using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
+using Lykke.Job.TxDetector.Core.Services.Clients;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Events;
 using Lykke.Job.TxDetector.Models;
@@ -24,7 +25,7 @@ namespace Lykke.Job.TxDetector.Sagas
     {
         private readonly ILog _log;
         private readonly IClientSettingsRepository _clientSettingsRepository;
-        private readonly IClientAccountsRepository _clientAccountsRepository;
+        private readonly IClientAccounts _clientAccounts;
         private readonly IAssetsServiceWithCache _assetsService;
         private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepositry;
         private readonly IBalanceChangeTransactionsRepository _balanceChangeTransactionsRepository;
@@ -33,14 +34,14 @@ namespace Lykke.Job.TxDetector.Sagas
         public ConfirmationsSaga(
             [NotNull] ILog log,
             [NotNull] IClientSettingsRepository clientSettingsRepository,
-            [NotNull] IClientAccountsRepository clientAccountsRepository,
+            [NotNull] IClientAccounts clientAccounts,
             [NotNull] IAssetsServiceWithCache assetsService,
             [NotNull] IAppGlobalSettingsRepositry appGlobalSettingsRepositry,
             [NotNull] IBalanceChangeTransactionsRepository balanceChangeTransactionsRepository,
             [NotNull] IInternalOperationsRepository internalOperationsRepository)
         {
             _log = log.CreateComponentScope(nameof(ConfirmationsSaga));
-            _clientAccountsRepository = clientAccountsRepository ?? throw new ArgumentNullException(nameof(clientAccountsRepository));
+            _clientAccounts = clientAccounts ?? throw new ArgumentNullException(nameof(clientAccounts));
             _assetsService = assetsService ?? throw new ArgumentNullException(nameof(assetsService));
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry ?? throw new ArgumentNullException(nameof(appGlobalSettingsRepositry));
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository ?? throw new ArgumentNullException(nameof(balanceChangeTransactionsRepository));
@@ -113,7 +114,7 @@ namespace Lykke.Job.TxDetector.Sagas
 
             ChaosKitty.Meow();
 
-            var clientAcc = await _clientAccountsRepository.GetByIdAsync(evt.ClientId);
+            var clientAcc = await _clientAccounts.GetByIdAsync(evt.ClientId);
 
             var sendEmailCommand = new SendNoRefundDepositDoneMailCommand
             {

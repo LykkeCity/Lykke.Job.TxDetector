@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Lykke.Job.TxDetector.Core.Domain.Clients
+namespace Lykke.Job.TxDetector.Core.Services.Clients
 {
     public interface IClientAccount
     {
@@ -14,7 +14,7 @@ namespace Lykke.Job.TxDetector.Core.Domain.Clients
         string NotificationsId { get; }
     }
 
-    public interface IClientAccountsRepository
+    public interface IClientAccounts
     {
         Task<IClientAccount> GetByIdAsync(string id);
     }
