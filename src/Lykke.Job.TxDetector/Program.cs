@@ -20,20 +20,17 @@ namespace Lykke.Job.TxDetector
             try
             {
                 var webHost = new WebHostBuilder()
-                .UseKestrel()
-                .UseUrls("http://*:5000")
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseStartup<Startup>()
-                .UseApplicationInsights()
-                .Build();
+                        .UseKestrel()
+                        .UseUrls("http://*:5000")
+                        .UseContentRoot(Directory.GetCurrentDirectory())
+                        .UseStartup<Startup>()
+                        .UseApplicationInsights()
+                        .Build();
 
                 webHost.Run();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Fatal error:");
-                Console.WriteLine(ex);
-
                 // Lets devops to see startup error in console between restarts in the Kubernetes
                 var delay = TimeSpan.FromMinutes(1);
 

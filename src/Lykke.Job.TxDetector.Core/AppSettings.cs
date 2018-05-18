@@ -13,6 +13,8 @@ namespace Lykke.Job.TxDetector.Core
         public AssetsSettings Assets { get; set; }
         public OperationsRepositoryServiceClientSettings OperationsRepositoryServiceClient { get; set; }
 
+        public ClientAccountClientSettings ClientAccountServiceClient { get; set; }
+
         public class TxDetectorSettings
         {
             public DbSettings Db { get; set; }
@@ -26,7 +28,7 @@ namespace Lykke.Job.TxDetector.Core
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
             public string RabbitMQConnectionString { get; set; }
-            public string Environment { get; set; }
+            public string Environment { get; set; }            
         }
 
         public class ChaosSettings
@@ -94,6 +96,17 @@ namespace Lykke.Job.TxDetector.Core
             public string ConnectionString { get; set; }
 
             public string QueueName { get; set; }
+        }
+
+        public class OperationsRepositoryClientSettings
+        {
+            public string ServiceUrl { get; set; }
+            public int RequestTimeout { get; set; }
+        }
+
+        public class ClientAccountClientSettings
+        {
+            public string ServiceUrl { get; set; }
         }
     }
 

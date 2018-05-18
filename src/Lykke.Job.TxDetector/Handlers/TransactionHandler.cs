@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
@@ -31,7 +32,7 @@ namespace Lykke.Job.TxDetector.Handlers
             [NotNull] IQBitNinjaApiCaller qBitNinjaApiCaller)
         {
             _qBitNinjaApiCaller = qBitNinjaApiCaller ?? throw new ArgumentNullException(nameof(qBitNinjaApiCaller));
-            _log = log.CreateComponentScope(nameof(TransactionHandler));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
             _balanceChangeTransactionsRepository = balanceChangeTransactionsRepository ?? throw new ArgumentNullException(nameof(balanceChangeTransactionsRepository));
             _confirmedTransactionsRepository = confirmedTransactionsRepository ?? throw new ArgumentNullException(nameof(confirmedTransactionsRepository));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -40,7 +41,7 @@ namespace Lykke.Job.TxDetector.Handlers
         // entry point
         public async Task<CommandHandlingResult> Handle(ProcessTransactionCommand command, IEventPublisher eventPublisher)
         {
-            _log.WriteInfo(nameof(ProcessTransactionCommand), command, "");
+            await _log.WriteInfoAsync(nameof(TransactionHandler), nameof(ProcessTransactionCommand), command.ToJson(), "");
 
             var confirmations = (await _qBitNinjaApiCaller.GetTransaction(command.TransactionHash))?.Block?.Confirmations;
 
@@ -61,7 +62,7 @@ namespace Lykke.Job.TxDetector.Handlers
                 var alreadyProcessed = !await _confirmedTransactionsRepository.SaveConfirmedIfNotExist(hash, tx.ClientId);
                 if (alreadyProcessed)
                 {
-                    _log.WriteInfo(nameof(ProcessTransactionCommand), command,
+                    await _log.WriteInfoAsync(nameof(TransactionHandler), nameof(ProcessTransactionCommand), "",
                         $"Transaction with hash {hash} for client {tx.ClientId} is already processed; ignoring it.");
                     continue;
                 }

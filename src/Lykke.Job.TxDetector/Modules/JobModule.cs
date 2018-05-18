@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
@@ -8,14 +8,12 @@ using Common;
 using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
-using Lykke.Job.TxDetector.AzureRepositories.Clients;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
 using Lykke.Job.TxDetector.AzureRepositories.PaymentSystems;
 using Lykke.Job.TxDetector.AzureRepositories.Settings;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
-using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
@@ -29,6 +27,7 @@ using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client;
+using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.OperationsRepository.Client;
 using Microsoft.Extensions.DependencyInjection;
 using QBitNinja.Client;
@@ -75,13 +74,14 @@ namespace Lykke.Job.TxDetector.Modules
             // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
             _services.RegisterAssetsClient(AssetServiceSettings.Create(
-                new Uri(_settings.Assets.ServiceUrl), 
+                new Uri(_settings.Assets.ServiceUrl),
                 _settings.TxDetectorJob.AssetsCache.ExpirationPeriod));
 
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
             BindServices(builder);
             BindNinja(builder);
+            BindClients(builder);
 
             builder.Populate(_services);
         }
@@ -106,6 +106,11 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
+        }
+
+        private void BindClients(ContainerBuilder builder)
+        {
+            builder.RegisterLykkeServiceClient(_settings.ClientAccountServiceClient.ServiceUrl);
         }
 
         private void BindRepositories(ContainerBuilder builder)
@@ -154,17 +159,7 @@ namespace Lykke.Job.TxDetector.Modules
                 new AppGlobalSettingsRepository(
                     AzureTableStorage<AppGlobalSettingsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
-
-            builder.RegisterInstance<IClientAccountsRepository>(
-                new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Traders", _log)));
-
-            builder.RegisterInstance<IClientSettingsRepository>(
-                new ClientSettingsRepository(
-                    AzureTableStorage<ClientSettingsEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "TraderSettings", _log)));
-
+            
             builder.RegisterInstance<IEmailCommandProducer>(
                 new EmailCommandProducer(
                     AzureQueueExt.Create(

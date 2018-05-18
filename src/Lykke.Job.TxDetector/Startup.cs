@@ -222,6 +222,7 @@ namespace Lykke.Job.TxDetector
                 slackNotificationsManager,
                 consoleLogger);
 
+
             azureStorageLogger.Start();
 
             var logToSlack = LykkeLogToSlack.Create(slackService, "TxDetector", LogLevel.Error | LogLevel.FatalError | LogLevel.Warning);
