@@ -1,21 +1,17 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
 using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
-using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
-using Lykke.Job.TxDetector.AzureRepositories.Clients;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
 using Lykke.Job.TxDetector.AzureRepositories.PaymentSystems;
 using Lykke.Job.TxDetector.AzureRepositories.Settings;
 using Lykke.Job.TxDetector.Core;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin;
 using Lykke.Job.TxDetector.Core.Domain.BitCoin.Ninja;
-using Lykke.Job.TxDetector.Core.Domain.Clients;
 using Lykke.Job.TxDetector.Core.Domain.Messages.Email.ContentGenerator;
 using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
@@ -29,9 +25,12 @@ using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client;
+using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.OperationsRepository.Client;
+using Lykke.SettingsReader;
 using Microsoft.Extensions.DependencyInjection;
 using QBitNinja.Client;
+using System;
 
 namespace Lykke.Job.TxDetector.Modules
 {
@@ -82,6 +81,7 @@ namespace Lykke.Job.TxDetector.Modules
             BindRepositories(builder);
             BindServices(builder);
             BindNinja(builder);
+            BindClients(builder);
 
             builder.Populate(_services);
         }
@@ -108,7 +108,12 @@ namespace Lykke.Job.TxDetector.Modules
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
         }
 
-        private void BindRepositories(ContainerBuilder builder)
+        private void BindClients(ContainerBuilder builder)
+        {
+            builder.RegisterLykkeServiceClient(_settings.ClientAccountServiceClient.ServiceUrl);
+        }
+
+    private void BindRepositories(ContainerBuilder builder)
         {
             builder.RegisterInstance<IPostponedCashInRepository>(
                 new PostponedCashInRepository(
@@ -154,16 +159,6 @@ namespace Lykke.Job.TxDetector.Modules
                 new AppGlobalSettingsRepository(
                     AzureTableStorage<AppGlobalSettingsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
-
-            builder.RegisterInstance<IClientAccountsRepository>(
-                new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Traders", _log)));
-
-            builder.RegisterInstance<IClientSettingsRepository>(
-                new ClientSettingsRepository(
-                    AzureTableStorage<ClientSettingsEntity>.Create(
-                        _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "TraderSettings", _log)));
 
             builder.RegisterInstance<IEmailCommandProducer>(
                 new EmailCommandProducer(

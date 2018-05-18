@@ -31,9 +31,6 @@ namespace Lykke.Job.TxDetector
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Fatal error:");
-                Console.WriteLine(ex);
-
                 // Lets devops to see startup error in console between restarts in the Kubernetes
                 var delay = TimeSpan.FromMinutes(1);
 
