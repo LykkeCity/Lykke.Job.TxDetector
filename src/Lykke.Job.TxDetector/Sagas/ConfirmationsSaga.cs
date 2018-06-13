@@ -102,8 +102,6 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(ConfirmationSavedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(ConfirmationSavedEvent), evt, "Handle received message");
-
             var hash = evt.TransactionHash;
             var clientId = evt.ClientId;
 
