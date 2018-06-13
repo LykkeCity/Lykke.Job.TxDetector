@@ -74,8 +74,8 @@ namespace Lykke.Job.TxDetector.Modules
             // builder.Register<PoisionQueueNotifierImplementation>().As<IPoisionQueueNotifier>();
 
             _services.RegisterAssetsClient(AssetServiceSettings.Create(
-                new Uri(_settings.Assets.ServiceUrl), 
-                _settings.TxDetectorJob.AssetsCache.ExpirationPeriod));
+                new Uri(_settings.Assets.ServiceUrl),
+                _settings.TxDetectorJob.AssetsCache.ExpirationPeriod), _log);
 
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
@@ -113,7 +113,7 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterLykkeServiceClient(_settings.ClientAccountServiceClient.ServiceUrl);
         }
 
-    private void BindRepositories(ContainerBuilder builder)
+        private void BindRepositories(ContainerBuilder builder)
         {
             builder.RegisterInstance<IPostponedCashInRepository>(
                 new PostponedCashInRepository(

@@ -13,21 +13,15 @@ namespace Lykke.Job.TxDetector.Handlers
 {
     public class EmailHandler
     {
-        private readonly ILog _log;
         private readonly IEmailSender _emailSender;
 
-        public EmailHandler(
-            [NotNull] ILog log, 
-            [NotNull] IEmailSender emailSender)
+        public EmailHandler([NotNull] IEmailSender emailSender)
         {
-            _log = log ?? throw new ArgumentNullException(nameof(log));
             _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
         }
 
         public async Task<CommandHandlingResult> Handle(SendNoRefundDepositDoneMailCommand command)
         {
-            await _log.WriteInfoAsync(nameof(EmailHandler), nameof(SendNoRefundDepositDoneMailCommand), command.ToJson(), "");
-
             ChaosKitty.Meow();
 
             var content = new NoRefundDepositDoneData
