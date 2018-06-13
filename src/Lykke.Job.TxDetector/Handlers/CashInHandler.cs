@@ -111,7 +111,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
             ChaosKitty.Meow();
 
-            var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
+            var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount.TruncateDecimalPlaces(asset.Accuracy));
             if (responseModel.Status != MeStatusCodes.Ok && responseModel.Status != MeStatusCodes.AlreadyProcessed && responseModel.Status != MeStatusCodes.Duplicate)
             {
                 _log.WriteInfo(nameof(ProcessCashInCommand), command, responseModel.ToJson());
