@@ -155,7 +155,7 @@ namespace Lykke.Job.TxDetector.Sagas
                         }
                         else
                         {
-                            var sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
+                            var sum = (cashIn.Value * Math.Pow(10, -asset.MultiplierPower)).TruncateDecimalPlaces(asset.Accuracy);
 
                             var cmd = new RegisterCashInOutCommand
                             {
