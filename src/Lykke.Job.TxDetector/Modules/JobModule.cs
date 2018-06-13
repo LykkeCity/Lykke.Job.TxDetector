@@ -1,12 +1,10 @@
-using System;
-using Autofac;
+﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Queue;
 using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common;
 using Common.Log;
-using Lykke.SettingsReader;
 using Lykke.Job.TxDetector.AzureRepositories.BitCoin;
 using Lykke.Job.TxDetector.AzureRepositories.Messages.Email;
 using Lykke.Job.TxDetector.AzureRepositories.PaymentSystems;
@@ -29,8 +27,10 @@ using Lykke.MatchingEngine.Connector.Services;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.OperationsRepository.Client;
+using Lykke.SettingsReader;
 using Microsoft.Extensions.DependencyInjection;
 using QBitNinja.Client;
+using System;
 
 namespace Lykke.Job.TxDetector.Modules
 {
@@ -75,7 +75,7 @@ namespace Lykke.Job.TxDetector.Modules
 
             _services.RegisterAssetsClient(AssetServiceSettings.Create(
                 new Uri(_settings.Assets.ServiceUrl),
-                _settings.TxDetectorJob.AssetsCache.ExpirationPeriod));
+                _settings.TxDetectorJob.AssetsCache.ExpirationPeriod), _log);
 
             BindMatchingEngineChannel(builder);
             BindRepositories(builder);
@@ -159,7 +159,7 @@ namespace Lykke.Job.TxDetector.Modules
                 new AppGlobalSettingsRepository(
                     AzureTableStorage<AppGlobalSettingsEntity>.Create(
                         _settingsManager.ConnectionString(i => i.TxDetectorJob.Db.ClientPersonalInfoConnString), "Setup", _log)));
-            
+
             builder.RegisterInstance<IEmailCommandProducer>(
                 new EmailCommandProducer(
                     AzureQueueExt.Create(
