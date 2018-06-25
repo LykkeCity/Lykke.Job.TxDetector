@@ -17,10 +17,12 @@ using Lykke.Job.TxDetector.Core.Domain.PaymentSystems;
 using Lykke.Job.TxDetector.Core.Domain.Settings;
 using Lykke.Job.TxDetector.Core.Services;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
+using Lykke.Job.TxDetector.Core.Services.ChainalysisStore;
 using Lykke.Job.TxDetector.Core.Services.Messages.Email;
 using Lykke.Job.TxDetector.Core.Services.Notifications;
 using Lykke.Job.TxDetector.Services;
 using Lykke.Job.TxDetector.Services.BitCoin;
+using Lykke.Job.TxDetector.Services.ChainalysisStore;
 using Lykke.Job.TxDetector.Services.Messages.Email;
 using Lykke.Job.TxDetector.Services.Notifications;
 using Lykke.MatchingEngine.Connector.Services;
@@ -106,6 +108,8 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
+
+			builder.Register<IChainalysisStoreService>(x => new ChainalysisStoreService(_log, _settings.TxDetectorJob.RabbitMQConnectionString, _settings.TxDetectorJob.ChainalysisExchange));
         }
 
         private void BindClients(ContainerBuilder builder)

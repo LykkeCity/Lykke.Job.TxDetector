@@ -8,10 +8,14 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="6.8.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.6" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Lykke.Job.TxDetector.Core\Lykke.Job.TxDetector.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ChainalysisStore\" />
+  </ItemGroup>
 </Project>

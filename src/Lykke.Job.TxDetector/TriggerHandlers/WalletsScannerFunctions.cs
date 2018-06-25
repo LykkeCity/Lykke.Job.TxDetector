@@ -166,7 +166,8 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
             {
                 var processTransactionCommand = new ProcessTransactionCommand
                 {
-                    TransactionHash = balanceChangeTx.Hash
+                    TransactionHash = balanceChangeTx.Hash,
+                    BlockchainTransaction = tx
                 };
 
                 _cqrsEngine.SendCommand(processTransactionCommand, "transactions", "transactions");

@@ -32,7 +32,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
             if (await _paymentTransactionsRepository.SetStatus(command.TransferId, PaymentStatus.NotifyProcessed) != null)
             {
-                eventPublisher.PublishEvent(new TransferProcessedEvent { TransferId = command.TransferId });
+				eventPublisher.PublishEvent(new TransferProcessedEvent { TransferId = command.TransferId });
             }
 
             return CommandHandlingResult.Ok();

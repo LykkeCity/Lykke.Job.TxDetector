@@ -65,8 +65,8 @@ namespace Lykke.Job.TxDetector.Handlers
                         $"Transaction with hash {hash} for client {tx.ClientId} is already processed; ignoring it.");
                     continue;
                 }
-
-                eventPublisher.PublishEvent(new ConfirmationSavedEvent { TransactionHash = hash, ClientId = tx.ClientId });
+                
+				eventPublisher.PublishEvent(new ConfirmationSavedEvent { TransactionHash = hash, ClientId = tx.ClientId, BlockchainTransaction = command.BlockchainTransaction, Multisig = tx.Multisig });
             }
             return CommandHandlingResult.Ok();
         }
