@@ -45,26 +45,8 @@ namespace Lykke.Job.TxDetector.Sagas
             _internalOperationsRepository = internalOperationsRepository ?? throw new ArgumentNullException(nameof(internalOperationsRepository));
         }
 
-        [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
-        private async Task Handle(CashInOperationCreatedEvent evt, ICommandSender sender)
+        private void Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(CashInOperationCreatedEvent), evt, "Handle received message");
-
-            var cmd = new RegisterCashInOutCommand
-            {
-                Transaction = evt.Transaction,
-                Asset = evt.Asset,
-                Amount = evt.Amount,
-                CommandId = Guid.NewGuid().ToString("N")
-            };
-
-            sender.SendCommand(cmd, "cashin");
-        }
-
-        private async Task Handle(CashInOutOperationRegisteredEvent evt, ICommandSender sender)
-        {
-            _log.WriteInfo(nameof(CashInOutOperationRegisteredEvent), evt, "Handle received message");
-
             var cmd = new RegisterBitcoinCashInCommand
             {
                 Transaction = evt.Transaction,
@@ -76,10 +58,8 @@ namespace Lykke.Job.TxDetector.Sagas
             sender.SendCommand(cmd, "cashin");
         }
 
-        private async Task Handle(BitcoinCashInRegisteredEvent evt, ICommandSender sender)
+        private void Handle(BitcoinCashInRegisteredEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(BitcoinCashInRegisteredEvent), evt, "Handle received message");
-
             var cmd = new ProcessCashInCommand
             {
                 Transaction = evt.Transaction,
@@ -91,23 +71,8 @@ namespace Lykke.Job.TxDetector.Sagas
             sender.SendCommand(cmd, "cashin");
         }
 
-        [Obsolete("Method is not deleted now only for compatibility purpose. Should be deleted after next release.")]
-        private async Task Handle(TransferOperationCreatedEvent evt, ICommandSender sender)
-        {
-            _log.WriteInfo(nameof(TransferOperationCreatedEvent), evt, "Handle received message");
-
-            var cmd = new ProcessTransferCommand
-            {
-                TransferId = evt.TransferId
-            };
-
-            sender.SendCommand(cmd, "transfer");
-        }
-
         private async Task Handle(TransactionProcessedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(TransactionProcessedEvent), evt, "Handle received message");
-
             ChaosKitty.Meow();
 
             var clientAcc = await _clientAccountClient.GetByIdAsync(evt.ClientId);
@@ -137,8 +102,6 @@ namespace Lykke.Job.TxDetector.Sagas
 
         private async Task Handle(ConfirmationSavedEvent evt, ICommandSender sender)
         {
-            _log.WriteInfo(nameof(ConfirmationSavedEvent), evt, "Handle received message");
-
             var hash = evt.TransactionHash;
             var clientId = evt.ClientId;
 
@@ -192,7 +155,7 @@ namespace Lykke.Job.TxDetector.Sagas
                         }
                         else
                         {
-                            var sum = cashIn.Value * Math.Pow(10, -asset.MultiplierPower);
+                            var sum = (cashIn.Value * Math.Pow(10, -asset.MultiplierPower)).TruncateDecimalPlaces(asset.Accuracy);
 
                             var cmd = new RegisterCashInOutCommand
                             {
@@ -213,7 +176,7 @@ namespace Lykke.Job.TxDetector.Sagas
         {
             return string.IsNullOrEmpty(bcnId)
                 ? await _assetsService.TryGetAssetAsync(LykkeConstants.BitcoinAssetId)
-                : (await _assetsService.GetAllAssetsAsync()).FirstOrDefault(x => x.BlockChainAssetId == bcnId);
+                : (await _assetsService.GetAllAssetsAsync(true)).FirstOrDefault(x => x.BlockChainAssetId == bcnId);
         }
     }
 }

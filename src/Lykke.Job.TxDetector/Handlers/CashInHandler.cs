@@ -41,7 +41,6 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(RegisterCashInOutCommand command, IEventPublisher eventPublisher)
         {
-            _log.WriteInfo(nameof(RegisterCashInOutCommand), command, "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -85,7 +84,6 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(RegisterBitcoinCashInCommand command, IEventPublisher eventPublisher)
         {
-            _log.WriteInfo(nameof(RegisterBitcoinCashInCommand), command, "");
             var id = command.CommandId;
             var transaction = command.Transaction;
 
@@ -106,7 +104,6 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(ProcessCashInCommand command, IEventPublisher eventPublisher)
         {
-            _log.WriteInfo(nameof(ProcessCashInCommand), command, "");
             var id = command.CommandId;
             var asset = command.Asset;
             var amount = command.Amount;
@@ -114,7 +111,7 @@ namespace Lykke.Job.TxDetector.Handlers
 
             ChaosKitty.Meow();
 
-            var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount);
+            var responseModel = await _matchingEngineClient.CashInOutAsync(id, transaction.ClientId, asset.Id, amount.TruncateDecimalPlaces(asset.Accuracy));
             if (responseModel.Status != MeStatusCodes.Ok && responseModel.Status != MeStatusCodes.AlreadyProcessed && responseModel.Status != MeStatusCodes.Duplicate)
             {
                 _log.WriteInfo(nameof(ProcessCashInCommand), command, responseModel.ToJson());
@@ -131,8 +128,6 @@ namespace Lykke.Job.TxDetector.Handlers
 
         public async Task<CommandHandlingResult> Handle(SavePostponedCashInCommand command)
         {
-            _log.WriteInfo(nameof(SavePostponedCashInCommand), command, "");
-
             await _postponedCashInRepository.SaveAsync(command.TransactionHash);
 
             ChaosKitty.Meow();

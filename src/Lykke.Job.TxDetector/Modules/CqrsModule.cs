@@ -71,10 +71,7 @@ namespace Lykke.Job.TxDetector.Modules
                         .FailedCommandRetryDelay(defaultRetryDelay)
                         .ListeningCommands(typeof(ProcessTransactionCommand))
                             .On("transactions-commands")
-                        .PublishingEvents(
-                                typeof(TransferOperationCreatedEvent),
-                                typeof(CashInOperationCreatedEvent),
-                                typeof(ConfirmationSavedEvent))
+                        .PublishingEvents(typeof(ConfirmationSavedEvent))
                             .With("transactions-events")
                         .WithCommandsHandler<TransactionHandler>(),
 
@@ -121,10 +118,7 @@ namespace Lykke.Job.TxDetector.Modules
         				.WithProjection(projection, "transactions"),               
 
                     Register.Saga<ConfirmationsSaga>("transactions-saga")
-                        .ListeningEvents(
-                                typeof(TransferOperationCreatedEvent),
-                                typeof(CashInOperationCreatedEvent),
-                                typeof(ConfirmationSavedEvent))
+                        .ListeningEvents(typeof(ConfirmationSavedEvent))
                             .From("transactions").On("transactions-events")
                         .ListeningEvents(
                                 typeof(CashInOutOperationRegisteredEvent),

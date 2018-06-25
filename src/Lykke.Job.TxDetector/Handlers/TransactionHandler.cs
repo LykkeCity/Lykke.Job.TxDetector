@@ -40,8 +40,6 @@ namespace Lykke.Job.TxDetector.Handlers
         // entry point
         public async Task<CommandHandlingResult> Handle(ProcessTransactionCommand command, IEventPublisher eventPublisher)
         {
-            _log.WriteInfo(nameof(ProcessTransactionCommand), command, "");
-
             var confirmations = (await _qBitNinjaApiCaller.GetTransaction(command.TransactionHash))?.Block?.Confirmations;
 
             var isConfirmed = confirmations >= _settings.TxDetectorConfirmationsLimit;
