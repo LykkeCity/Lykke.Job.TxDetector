@@ -109,7 +109,7 @@ namespace Lykke.Job.TxDetector.Modules
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
 
-			builder.Register<IChainalysisStoreService>(x => new ChainalysisStoreService(_log, _settings.TxDetectorJob.RabbitMQConnectionString, _settings.TxDetectorJob.ChainalysisExchange));
+            builder.Register<IChainalysisStoreService>(x => new ChainalysisStoreService(_log, _settings.TxDetectorJob.RabbitMQConnectionString, _settings.TxDetectorJob.ChainalysisExchange));
         }
 
         private void BindClients(ContainerBuilder builder)

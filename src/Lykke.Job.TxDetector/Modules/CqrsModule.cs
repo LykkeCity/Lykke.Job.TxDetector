@@ -51,13 +51,13 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<NotificationsHandler>();
             builder.RegisterType<EmailHandler>();
             builder.RegisterType<EventLogProjection>();
-			builder.RegisterType<ChainalysisStoreProjection>();
+            builder.RegisterType<ChainalysisStoreProjection>();
 
             var defaultRetryDelay = _settings.TxDetectorJob.RetryDelayInMilliseconds;
             builder.Register(ctx =>
             {
                 var projection = ctx.Resolve<EventLogProjection>();
-				var chaibalysisStoreProjection = ctx.Resolve<ChainalysisStoreProjection>();
+                var chaibalysisStoreProjection = ctx.Resolve<ChainalysisStoreProjection>();
 
                 return new CqrsEngine(
                     _log,
@@ -112,10 +112,10 @@ namespace Lykke.Job.TxDetector.Modules
                             .From("transfer").On("transfer-events")
                         .WithProjection(projection, "transfer"),
 
-					Register.BoundedContext("chainalysis-store")
-        			    .ListeningEvents(typeof(ConfirmationSavedEvent))
-        					.From("transactions").On("transactions-events")
-        				.WithProjection(projection, "transactions"),               
+                    Register.BoundedContext("chainalysis-store")
+                        .ListeningEvents(typeof(ConfirmationSavedEvent))
+                            .From("transactions").On("transactions-events")
+                        .WithProjection(projection, "transactions"),               
 
                     Register.Saga<ConfirmationsSaga>("transactions-saga")
                         .ListeningEvents(typeof(ConfirmationSavedEvent))

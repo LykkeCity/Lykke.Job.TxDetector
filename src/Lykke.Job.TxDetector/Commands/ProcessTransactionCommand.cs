@@ -8,7 +8,7 @@ namespace Lykke.Job.TxDetector.Commands
     {
         [ProtoMember(1)]
         public string TransactionHash { get; set; }
-		[ProtoMember(2)]
-		public IBlockchainTransaction BlockchainTransaction { get; set; }
+        [ProtoMember(2)]
+        public IBlockchainTransaction BlockchainTransaction { get; set; }
     }
 }

@@ -11,25 +11,25 @@ namespace Lykke.Job.TxDetector.Projections
 {
     public class ChainalysisStoreProjection
     {
-		private readonly ILog _log;
-		private readonly IChainalysisStoreService _chainalysisStoreService;
+        private readonly ILog _log;
+        private readonly IChainalysisStoreService _chainalysisStoreService;
 
-		public ChainalysisStoreProjection(
+        public ChainalysisStoreProjection(
             [NotNull] ILog log,
-			[NotNull] IChainalysisStoreService chainalysisStoreService)
+            [NotNull] IChainalysisStoreService chainalysisStoreService)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
-			_chainalysisStoreService = chainalysisStoreService ?? throw new ArgumentNullException(nameof(chainalysisStoreService));
+            _chainalysisStoreService = chainalysisStoreService ?? throw new ArgumentNullException(nameof(chainalysisStoreService));
         }
         
-		public async Task Handle(ConfirmationSavedEvent evt)
+        public async Task Handle(ConfirmationSavedEvent evt)
         {
-			
-			await _log.WriteInfoAsync(nameof(ChainalysisStoreProjection), nameof(ConfirmationSavedEvent), evt.ToJson(), "");
+            
+            await _log.WriteInfoAsync(nameof(ChainalysisStoreProjection), nameof(ConfirmationSavedEvent), evt.ToJson(), "");
 
             ChaosKitty.Meow();
 
-			await _chainalysisStoreService.ProccedAsync(evt.BlockchainTransaction, evt.ClientId, evt.Multisig);
+            await _chainalysisStoreService.ProccedAsync(evt.BlockchainTransaction, evt.ClientId, evt.Multisig);
         }
     }
 }

@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using NBitcoin;
 using QBitNinja.Client.Models;
@@ -21,8 +21,8 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                     {
                         Address = x.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString(),
                         Amount = (x as ColoredCoin)?.Amount.Quantity ?? ((Coin)x).Amount.Satoshi,
-					    BcnAssetId = (x as ColoredCoin)?.AssetId.ToString(network),
-					    Output = x.Outpoint.N
+                        BcnAssetId = (x as ColoredCoin)?.AssetId.ToString(network),
+                        Output = x.Outpoint.N
                     }).Where(x => x.Address == address).ToArray(),
                 SpentCoins = item.SpentCoins.Select(
                     x => new InputOutput
@@ -30,7 +30,7 @@ namespace Lykke.Job.TxDetector.Services.BitCoin.Ninja
                         Address = x.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString(),
                         Amount = (x as ColoredCoin)?.Amount.Quantity ?? ((Coin)x).Amount.Satoshi,
                         BcnAssetId = (x as ColoredCoin)?.AssetId.ToString(network),
-					    Output = x.Outpoint.N
+                        Output = x.Outpoint.N
                     }).Where(x => x.Address == address).ToArray()
             };
         }
