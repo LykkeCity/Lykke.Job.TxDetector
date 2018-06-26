@@ -33,10 +33,10 @@ namespace Lykke.Job.TxDetector.Core
 
         public class ChaosSettings
         {
-			public double StateOfChaos { get; set; }
-		}
+            public double StateOfChaos { get; set; }
+        }
 
-		public class DbSettings
+        public class DbSettings
         {
             public string LogsConnString { get; set; }
             public string BitCoinQueueConnectionString { get; set; }
