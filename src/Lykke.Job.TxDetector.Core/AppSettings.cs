@@ -27,17 +27,16 @@ namespace Lykke.Job.TxDetector.Core
             [Optional]
             public ChaosSettings ChaosKitty { get; set; }
             public string RabbitMQConnectionString { get; set; }
-            public string ChainalysisExchange { get; set; }
             public string Environment { get; set; }
 
         }
 
         public class ChaosSettings
         {
-            public double StateOfChaos { get; set; }
-        }
+			public double StateOfChaos { get; set; }
+		}
 
-        public class DbSettings
+		public class DbSettings
         {
             public string LogsConnString { get; set; }
             public string BitCoinQueueConnectionString { get; set; }

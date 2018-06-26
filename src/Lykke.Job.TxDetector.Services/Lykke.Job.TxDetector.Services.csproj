@@ -16,6 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ChainalysisStore\" />
+    <Compile Remove="ChainalysisStore\ChainalisysCashMessage.cs" />
   </ItemGroup>
 </Project>
