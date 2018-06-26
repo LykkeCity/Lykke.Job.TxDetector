@@ -101,8 +101,6 @@ namespace Lykke.Job.TxDetector.Core
         {
             public string ServiceUrl { get; set; }
         }
-
-
 }
 
     public static class NinjaSettingsExtensions
