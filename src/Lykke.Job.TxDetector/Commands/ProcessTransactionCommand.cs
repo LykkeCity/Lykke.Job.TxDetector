@@ -1,5 +1,4 @@
-﻿using Lykke.Job.TxDetector.Core.Services.BitCoin;
-using ProtoBuf;
+﻿using ProtoBuf;
 
 namespace Lykke.Job.TxDetector.Commands
 {
