@@ -64,7 +64,7 @@ namespace Lykke.Job.TxDetector.Handlers
                     continue;
                 }
                 
-                eventPublisher.PublishEvent(new ConfirmationSavedEvent { TransactionHash = hash, ClientId = tx.ClientId, BlockchainTransaction = command.BlockchainTransaction, Multisig = tx.Multisig });
+                eventPublisher.PublishEvent(new ConfirmationSavedEvent { TransactionHash = hash, ClientId = tx.ClientId, Multisig = tx.Multisig });
             }
             return CommandHandlingResult.Ok();
         }

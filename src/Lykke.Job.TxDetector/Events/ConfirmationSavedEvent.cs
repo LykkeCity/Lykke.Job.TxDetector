@@ -11,8 +11,6 @@ namespace Lykke.Job.TxDetector.Events
         [ProtoMember(2)]
         public string ClientId { get; set; }
         [ProtoMember(3)]
-        public IBlockchainTransaction BlockchainTransaction { get; set; }
-        [ProtoMember(4)]
         public string Multisig { get; set; }
     }
 }
