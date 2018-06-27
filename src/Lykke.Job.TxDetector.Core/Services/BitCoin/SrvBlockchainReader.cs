@@ -18,7 +18,6 @@ namespace Lykke.Job.TxDetector.Core.Services.BitCoin
         public string BcnAssetId { get; set; }
         public double Amount { get; set; }
         public string Address { get; set; }
-        public uint Output { get; set; }
     }
 
     public class BlockchainTransaction : IBlockchainTransaction
