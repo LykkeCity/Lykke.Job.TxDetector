@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Lykke.Job.TxDetector.Core.Services.BitCoin;
 using NBitcoin;
 using QBitNinja.Client.Models;
