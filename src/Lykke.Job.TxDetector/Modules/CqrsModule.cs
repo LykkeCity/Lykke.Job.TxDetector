@@ -108,7 +108,7 @@ namespace Lykke.Job.TxDetector.Modules
                     Register.BoundedContext("history")
                         .ListeningEvents(typeof(TransferProcessedEvent))
                             .From("transfer").On("transfer-events")
-                        .WithProjection(projection, "transfer"),           
+                        .WithProjection(projection, "transfer"),
 
                     Register.Saga<ConfirmationsSaga>("transactions-saga")
                         .ListeningEvents(typeof(ConfirmationSavedEvent))

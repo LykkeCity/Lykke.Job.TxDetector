@@ -12,4 +12,5 @@
     <PackageReference Include="Lykke.SettingsReader" Version="2.4.0" />
     <PackageReference Include="QBitNinja.Client" Version="1.0.3.47" />
   </ItemGroup>
+
 </Project>

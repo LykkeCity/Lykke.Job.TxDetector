@@ -13,4 +13,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Lykke.Job.TxDetector.Core\Lykke.Job.TxDetector.Core.csproj" />
   </ItemGroup>
+
 </Project>

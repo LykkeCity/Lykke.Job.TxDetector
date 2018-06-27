@@ -106,7 +106,6 @@ namespace Lykke.Job.TxDetector.Modules
             builder.RegisterType<EmailSender>().As<IEmailSender>().SingleInstance();
 
             builder.Register<IAppNotifications>(x => new SrvAppNotifications(_settings.TxDetectorJob.Notifications.HubConnectionString, _settings.TxDetectorJob.Notifications.HubName));
-            
         }
 
         private void BindClients(ContainerBuilder builder)
