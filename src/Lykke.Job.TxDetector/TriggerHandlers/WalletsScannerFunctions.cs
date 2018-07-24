@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -82,7 +82,9 @@ namespace Lykke.Job.TxDetector.TriggerHandlers
 
         private async Task StartBlockScan()
         {
-            var multisigs = (await _walletCredentialsRepository.GetAllAsync()).GroupBy(x => x.MultiSig).ToDictionary(x => x.Key, x => x.First().ClientId);
+            var allMultisigs = (await _walletCredentialsRepository.GetAllAsync())
+                .Where(x => !string.IsNullOrEmpty(x.MultiSig));
+            var multisigs = allMultisigs.GroupBy(x => x.MultiSig).ToDictionary(x => x.Key, x => x.First().ClientId);
             var segwits = (await _bcnClientCredentialsRepository.GetAllAsync(LykkeConstants.BitcoinAssetId)).GroupBy(x => x.AssetAddress).ToDictionary(x => x.Key, x => x.First().ClientId);
 
             var currentBlock = await _lastProcessedBlockRepository.GetLastProcessedBlockHeightAsync() ?? await _lastProcessedBlockRepository.GetMinBlockHeight();
